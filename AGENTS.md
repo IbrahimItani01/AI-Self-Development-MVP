@@ -86,6 +86,7 @@ Every agent must read this file before making changes. Update this file whenever
 - Telegram invite code onboarding
 - AI-generated growth plan
 - AI chat reply and conversation summary
+- Shared AI response policy with grade-aware tone and output token caps
 - Weekly check-in flow with summary and suggested next step
 - Follow-up classification and flag creation
 - Follow-up status updates from dashboard
@@ -285,12 +286,12 @@ Security model:
   - Student record is created or linked by Telegram user ID.
   - Onboarding session begins.
 - Onboarding flow:
-  - Preferred name
-  - Grade/cohort
+  - Preferred username/name
+  - Lebanon-focused grade selection through Telegram inline buttons
   - Focus area
   - Main challenge
   - 30-day progress definition
-  - Check-in cadence
+  - Check-in cadence through fixed Telegram inline button values
   - AI growth plan generation
   - Save growth plan and mark onboarding complete
 - Chat flow:
@@ -349,12 +350,19 @@ Security model:
   - Ask one focused question at a time.
   - Encourage small next steps and reflection.
   - Recommend trusted adult/school counselor follow-up when appropriate.
+  - Adapt tone to the student's grade level:
+    - Grades 1-3: very simple, warm, short language; at most one light emoji when appropriate.
+    - Grades 4-6: simple, friendly, concrete language.
+    - Grades 7-9: clear, respectful, practical language.
+    - Grades 10+: mature, respectful, simple professional language.
+  - Keep responses brief to control token usage.
 - The AI must not:
   - Diagnose.
   - Treat.
   - Present itself as therapy.
   - Provide medical advice.
   - Replace counselors or school support staff.
+  - Use playful language or emojis for sensitive concerns.
 - Follow-up classifier output must remain strict JSON:
 
 ```json
