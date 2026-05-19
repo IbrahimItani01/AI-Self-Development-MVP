@@ -1,0 +1,85 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function adminDoc() {
+      return get(/databases/$(database)/documents/organizationAdmins/$(request.auth.uid));
+    }
+
+    function isOrgAdmin(organizationId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/organizationAdmins/$(request.auth.uid))
+        && adminDoc().data.organizationId == organizationId;
+    }
+
+    match /organizations/{organizationId} {
+      allow read, update: if isOrgAdmin(organizationId);
+      allow create, delete: if false;
+    }
+
+    match /organizationAdmins/{adminId} {
+      allow read: if signedIn() && (adminId == request.auth.uid || isOrgAdmin(resource.data.organizationId));
+      allow write: if false;
+    }
+
+    match /inviteCodes/{inviteId} {
+      allow read, create, update, delete: if isOrgAdmin(request.resource.data.organizationId) || isOrgAdmin(resource.data.organizationId);
+    }
+
+    match /students/{studentId} {
+      allow read, update: if isOrgAdmin(resource.data.organizationId);
+      allow create, delete: if false;
+    }
+
+    match /studentOnboarding/{docId} {
+      allow read: if isOrgAdmin(resource.data.organizationId);
+      allow write: if false;
+    }
+
+    match /conversations/{conversationId} {
+      allow read: if isOrgAdmin(resource.data.organizationId);
+      allow write: if false;
+    }
+
+    match /messages/{messageId} {
+      allow read: if isOrgAdmin(resource.data.organizationId);
+      allow write: if false;
+    }
+
+    match /checkIns/{checkInId} {
+      allow read: if isOrgAdmin(resource.data.organizationId);
+      allow write: if false;
+    }
+
+    match /growthPlans/{planId} {
+      allow read: if isOrgAdmin(resource.data.organizationId);
+      allow write: if false;
+    }
+
+    match /followUpFlags/{flagId} {
+      allow read, update: if isOrgAdmin(resource.data.organizationId);
+      allow create, delete: if false;
+    }
+
+    match /usageLogs/{usageId} {
+      allow read: if isOrgAdmin(resource.data.organizationId);
+      allow write: if false;
+    }
+
+    match /stripeEvents/{eventId} {
+      allow read, write: if false;
+    }
+
+    match /botSessions/{sessionId} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
