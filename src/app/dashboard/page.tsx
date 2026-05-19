@@ -4,11 +4,17 @@ import { Card, SectionTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { getDashboardOverview } from "@/lib/db/organizations";
+import { getSubscriptionPlan } from "@/lib/db/plans";
 import { formatCurrency } from "@/lib/utils/money";
+import { subscriptionPlanDisplayName } from "@/lib/utils/plans";
 
 export default async function DashboardPage() {
   const { organization } = await requireAdmin();
-  const overview = await getDashboardOverview(organization.id);
+  const [overview, plan] = await Promise.all([
+    getDashboardOverview(organization.id),
+    getSubscriptionPlan(organization.plan),
+  ]);
+  const planName = subscriptionPlanDisplayName(plan, overview.organization.plan);
 
   return (
     <div className="space-y-6">
@@ -23,7 +29,7 @@ export default async function DashboardPage() {
         <StatCard label="Check-ins this month" value={overview.weeklyCheckIns} />
         <StatCard label="AI tokens this month" value={overview.monthlyTokens.toLocaleString()} />
         <StatCard label="Estimated AI cost" value={formatCurrency(overview.monthlyEstimatedCost)} />
-        <StatCard label="Plan" value={overview.organization.plan} helper={`${overview.organization.maxStudents} student limit`} />
+        <StatCard label="Plan" value={planName} helper={`${overview.organization.maxStudents} student limit`} />
         <StatCard label="Access status" value={overview.organization.status} />
       </div>
       <Card>

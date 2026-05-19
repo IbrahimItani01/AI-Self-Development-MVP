@@ -10,7 +10,7 @@ async function main() {
   const ownerEmail = process.env.PLATFORM_OWNER_EMAIL || "owner@example.com";
   let firebaseUid = process.env.PLATFORM_OWNER_UID || "replace-with-firebase-uid";
   const proPlan = {
-    name: "Pro",
+    name: "PRO",
     description: "Annual school plan for a structured student development pilot with Telegram access, dashboard visibility, and AI usage controls.",
     stripePriceId: process.env.STRIPE_PRICE_ID_PRO || "",
     annualPriceCents: 150000,

@@ -8,6 +8,7 @@ import { getSubscriptionPlan } from "@/lib/db/plans";
 import { canStartCheckout } from "@/lib/stripe/server";
 import { formatShortDate } from "@/lib/utils/dates";
 import { formatCurrency } from "@/lib/utils/money";
+import { subscriptionPlanDisplayName } from "@/lib/utils/plans";
 
 export default async function BillingPage() {
   const { organization } = await requireAdmin();
@@ -19,6 +20,7 @@ export default async function BillingPage() {
   const monthlyTokenLimit = organization.monthlyTokenLimit ?? plan?.monthlyTokenLimit ?? 0;
   const tokenUsagePercent = monthlyTokenLimit ? Math.min(100, Math.round((overview.monthlyTokens / monthlyTokenLimit) * 100)) : 0;
   const checkoutAvailable = canStartCheckout(organization);
+  const planName = subscriptionPlanDisplayName(plan, organization.plan);
 
   return (
     <div className="space-y-6">
@@ -27,7 +29,7 @@ export default async function BillingPage() {
         <Badge tone={statusTone(organization.status)}>{organization.status}</Badge>
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Current plan" value={plan?.name ?? organization.plan} helper={organization.status === "active" ? "Subscription active" : "Payment required"} />
+        <StatCard label="Current plan" value={planName} helper={organization.status === "active" ? "Subscription active" : "Payment required"} />
         <StatCard label="Student seats" value={`${overview.totalStudents}/${organization.maxStudents}`} helper={`${studentUsagePercent}% used`} />
         <StatCard label="AI tokens this month" value={overview.monthlyTokens.toLocaleString()} helper={monthlyTokenLimit ? `${tokenUsagePercent}% of ${monthlyTokenLimit.toLocaleString()}` : "No limit configured"} />
         <StatCard label="Estimated AI cost" value={formatCurrency(overview.monthlyEstimatedCost)} />
@@ -60,7 +62,7 @@ export default async function BillingPage() {
               hasStripeCustomer={Boolean(organization.stripeCustomerId)}
             />
             {!checkoutAvailable ? (
-              <p className="mt-3 text-sm text-ink/60">This organization is already on the Pro plan. Use the billing portal for receipts, payment methods, and subscription management.</p>
+              <p className="mt-3 text-sm text-ink/60">This organization is already on the {planName} plan. Use the billing portal for receipts, payment methods, and subscription management.</p>
             ) : null}
           </div>
         </Card>

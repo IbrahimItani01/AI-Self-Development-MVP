@@ -1,9 +1,14 @@
 import { Card, SectionTitle } from "@/components/ui/card";
 import { Badge, statusTone } from "@/components/ui/badge";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
+import { getSubscriptionPlan } from "@/lib/db/plans";
+import { subscriptionPlanDisplayName } from "@/lib/utils/plans";
 
 export default async function SettingsPage() {
   const { organization } = await requireAdmin();
+  const plan = await getSubscriptionPlan(organization.plan);
+  const planName = subscriptionPlanDisplayName(plan, organization.plan);
+
   return (
     <div className="space-y-6">
       <SectionTitle title="Settings" description="Organization settings and V1 placeholders." />
@@ -12,7 +17,7 @@ export default async function SettingsPage() {
         <dl className="mt-4 grid gap-3 text-sm md:grid-cols-2">
           <Row label="Name" value={organization.name} />
           <Row label="Slug" value={organization.slug} />
-          <Row label="Plan" value={organization.plan} />
+          <Row label="Plan" value={planName} />
           <Row label="Max students" value={String(organization.maxStudents)} />
           <div className="rounded-md bg-sand px-4 py-3">
             <dt className="text-ink/50">Status</dt>
