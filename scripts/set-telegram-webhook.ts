@@ -1,4 +1,7 @@
-import "dotenv/config";
+import { config } from "dotenv";
+
+config({ path: ".env.local" });
+config();
 
 async function main() {
   const token = process.env.TELEGRAM_BOT_TOKEN;

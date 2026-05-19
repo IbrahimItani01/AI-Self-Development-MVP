@@ -1,7 +1,10 @@
-import "dotenv/config";
+import { config } from "dotenv";
 import { adminDb } from "../src/lib/firebase/admin";
 import { sendTelegramMessage } from "../src/lib/telegram/bot";
 import type { Organization, Student } from "../src/types";
+
+config({ path: ".env.local" });
+config();
 
 async function main() {
   const db = adminDb();

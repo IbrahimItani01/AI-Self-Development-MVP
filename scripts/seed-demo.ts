@@ -1,5 +1,8 @@
-import "dotenv/config";
+import { config } from "dotenv";
 import { adminAuth, adminDb, serverTimestamp, toFirestoreDate } from "../src/lib/firebase/admin";
+
+config({ path: ".env.local" });
+config();
 
 async function main() {
   const db = adminDb();
