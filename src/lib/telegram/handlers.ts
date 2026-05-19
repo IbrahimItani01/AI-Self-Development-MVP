@@ -29,7 +29,14 @@ import {
 import { currentWeekStart } from "@/lib/utils/dates";
 import type { CheckInAnswers, Student, TelegramUpdate, TelegramUser } from "@/types";
 import { answerCallbackQuery, sendTelegramMessage } from "./bot";
-import { focusAreaButtons, HELP_MESSAGE, INACTIVE_ORG_MESSAGE, onboardingQuestion } from "./messages";
+import {
+  checkInCadenceOptions,
+  focusAreaButtons,
+  HELP_MESSAGE,
+  INACTIVE_ORG_MESSAGE,
+  lebanonGradeOptions,
+  onboardingQuestion,
+} from "./messages";
 
 const checkInSteps: Array<keyof CheckInAnswers> = ["progress", "difficulty", "insight", "nextStep"];
 const checkInPrompts: Record<keyof CheckInAnswers, string> = {
@@ -180,6 +187,18 @@ async function handleCallback(user: TelegramUser, chatId: string, callbackId: st
     return;
   }
 
+  if (data.startsWith("grade:")) {
+    const selected = lebanonGradeOptions.find((option) => option.id === data.replace("grade:", ""));
+    if (selected) await continueOnboarding(student, chatId, selected.value);
+    return;
+  }
+
+  if (data.startsWith("cadence:")) {
+    const selected = checkInCadenceOptions.find((option) => option.id === data.replace("cadence:", ""));
+    if (selected) await continueOnboarding(student, chatId, selected.value);
+    return;
+  }
+
   if (data === "reset:no") {
     await clearBotSession(String(user.id));
     await sendTelegramMessage({ chatId, text: "Reset canceled." });
@@ -209,6 +228,17 @@ async function handleCallback(user: TelegramUser, chatId: string, callbackId: st
 async function continueOnboarding(student: Student, chatId: string, answer: string) {
   const session = await getBotSession(student.telegramUserId);
   const step = session?.step || "preferredName";
+
+  if (step === "gradeLevel" && !lebanonGradeOptions.some((option) => option.value === answer)) {
+    await sendOnboardingQuestion(chatId, step);
+    return;
+  }
+
+  if (step === "checkInCadence" && !checkInCadenceOptions.some((option) => option.value === answer)) {
+    await sendOnboardingQuestion(chatId, step);
+    return;
+  }
+
   const data = { ...(session?.data ?? {}), [step]: answer };
   const nextStep = nextOnboardingStep(step);
 
@@ -229,17 +259,7 @@ async function continueOnboarding(student: Student, chatId: string, answer: stri
       step: nextStep,
       data,
     });
-    if (nextStep === "focusArea") {
-      await sendTelegramMessage({
-        chatId,
-        text: onboardingQuestion(nextStep),
-        replyMarkup: {
-          inline_keyboard: focusAreaButtons.map((row) => row.map((label) => ({ text: label, callback_data: `focus:${label}` }))),
-        },
-      });
-    } else {
-      await sendTelegramMessage({ chatId, text: onboardingQuestion(nextStep) });
-    }
+    await sendOnboardingQuestion(chatId, nextStep);
     return;
   }
 
@@ -250,6 +270,51 @@ function nextOnboardingStep(step: string): string | null {
   const steps = ["preferredName", "gradeLevel", "focusArea", "mainChallenge", "progressDefinition", "checkInCadence"];
   const index = steps.indexOf(step);
   return index >= 0 && index < steps.length - 1 ? steps[index + 1]! : null;
+}
+
+async function sendOnboardingQuestion(chatId: string, step: string) {
+  if (step === "gradeLevel") {
+    await sendTelegramMessage({
+      chatId,
+      text: onboardingQuestion(step),
+      replyMarkup: {
+        inline_keyboard: chunk(lebanonGradeOptions, 2).map((row) =>
+          row.map((option) => ({ text: option.label, callback_data: `grade:${option.id}` })),
+        ),
+      },
+    });
+    return;
+  }
+
+  if (step === "focusArea") {
+    await sendTelegramMessage({
+      chatId,
+      text: onboardingQuestion(step),
+      replyMarkup: {
+        inline_keyboard: focusAreaButtons.map((row) => row.map((label) => ({ text: label, callback_data: `focus:${label}` }))),
+      },
+    });
+    return;
+  }
+
+  if (step === "checkInCadence") {
+    await sendTelegramMessage({
+      chatId,
+      text: onboardingQuestion(step),
+      replyMarkup: {
+        inline_keyboard: checkInCadenceOptions.map((option) => [{ text: option.label, callback_data: `cadence:${option.id}` }]),
+      },
+    });
+    return;
+  }
+
+  await sendTelegramMessage({ chatId, text: onboardingQuestion(step) });
+}
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const rows: T[][] = [];
+  for (let index = 0; index < items.length; index += size) rows.push(items.slice(index, index + size));
+  return rows;
 }
 
 async function finishOnboarding(studentId: string, chatId: string, answers: Record<string, unknown>) {

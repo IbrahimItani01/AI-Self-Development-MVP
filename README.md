@@ -15,7 +15,7 @@ Developers and coding agents should read `AGENTS.md` before working on this proj
 - Firestore data model for organizations, admins, invite codes, students, conversations, check-ins, growth plans, follow-up flags, usage logs, and Stripe event logs
 - Firebase Admin SDK server-side access
 - Telegram Bot API webhook at `/api/telegram/webhook`
-- Invite code onboarding flow with growth plan generation
+- Invite code onboarding flow with Lebanon-focused grade buttons, fixed check-in cadence buttons, and growth plan generation
 - AI chat, conversation summaries, check-in summaries, and cautious follow-up classification
 - Stripe Checkout, Billing Portal, and webhook subscription tracking
 - AI usage and estimated cost logging
