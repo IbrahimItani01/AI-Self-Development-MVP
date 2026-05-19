@@ -102,7 +102,7 @@ export async function getDashboardOverview(organizationId: string): Promise<Dash
 
 export async function updateOrganizationSubscription(input: {
   organizationId: string;
-  status: OrganizationStatus;
+  status?: OrganizationStatus;
   plan?: OrganizationPlan;
   maxStudents?: number;
   monthlyTokenLimit?: number;
@@ -121,7 +121,8 @@ export async function updateOrganizationSubscription(input: {
         monthlyTokenLimit: input.monthlyTokenLimit,
         stripeCustomerId: input.stripeCustomerId,
         stripeSubscriptionId: input.stripeSubscriptionId,
-        subscriptionCurrentPeriodEnd: toFirestoreDate(input.subscriptionCurrentPeriodEnd),
+        subscriptionCurrentPeriodEnd:
+          input.subscriptionCurrentPeriodEnd === undefined ? undefined : toFirestoreDate(input.subscriptionCurrentPeriodEnd),
         updatedAt: serverTimestamp(),
       }),
       { merge: true },

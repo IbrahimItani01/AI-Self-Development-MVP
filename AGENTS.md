@@ -333,6 +333,8 @@ Security model:
 - Webhook endpoint: `POST /api/stripe/webhook`
   - Verifies Stripe signature with `STRIPE_WEBHOOK_SECRET`.
   - Stores event IDs in `stripeEvents`.
+  - Subscription current period end is read from the first subscription item, with a top-level fallback for older Stripe payloads.
+  - Subscription webhook events that map to internal `inactive` do not demote an organization; Checkout and invoice success events are the source of activation because Stripe webhooks can arrive out of order.
   - Handles:
     - `checkout.session.completed`
     - `customer.subscription.created`

@@ -1,3 +1,5 @@
+import Stripe from "stripe";
+
 export type OrganizationStatus = "active" | "inactive" | "past_due" | "canceled" | "trial";
 export type OrganizationPlan = "pilot" | "school" | "pro" | "custom";
 export type AdminRole = "owner" | "admin" | "counselor";
@@ -221,3 +223,11 @@ export interface TelegramUpdate {
   callback_query?: TelegramCallbackQuery;
   my_chat_member?: TelegramChatMemberUpdate;
 }
+
+export type SubscriptionItemWithPeriod = Stripe.SubscriptionItem & {
+  current_period_end?: number | null;
+};
+
+export type SubscriptionWithLegacyPeriod = Stripe.Subscription & {
+  current_period_end?: number | null;
+};
