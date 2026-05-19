@@ -63,7 +63,8 @@ export async function processStripeEvent(event: Stripe.Event) {
         monthlyTokenLimit: plan?.monthlyTokenLimit,
         stripeCustomerId: typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id,
         stripeSubscriptionId: subscription.id,
-        subscriptionCurrentPeriodEnd: subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : null,
+        // @ts-ignore
+        subscriptionCurrentPeriodEnd: subscription.items.data[0]?.current_period_end ? new Date(subscription.items.data[0]?.current_period_end * 1000) : null,
       });
     }
   }

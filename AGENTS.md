@@ -66,7 +66,7 @@ Every agent must read this file before making changes. Update this file whenever
 
 ## Current Implemented Features
 
-- Public landing page at `/`
+- Modern animated public landing page at `/` with student-centered product narrative, Telegram companion preview, school dashboard preview, workflow, and safety positioning
 - Firebase email/password dashboard login at `/login`
 - Organization registration at `/register` and plan selection at `/register/plan`
 - Server session cookie creation at `/api/auth/session`
