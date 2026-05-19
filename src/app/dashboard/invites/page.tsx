@@ -6,18 +6,16 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { createInviteCode, listInviteCodes, updateInviteCode } from "@/lib/db/invites";
 import { formatShortDate } from "@/lib/utils/dates";
-import { randomCode } from "@/lib/utils/ids";
 
 async function createInvite(formData: FormData) {
   "use server";
   const { organization } = await requireAdmin();
-  const code = String(formData.get("code") || randomCode("CEDARS"));
   const label = String(formData.get("label") || "Student invite");
   const maxUsesValue = String(formData.get("maxUses") || "");
   const expiresAtValue = String(formData.get("expiresAt") || "");
   await createInviteCode({
     organizationId: organization.id,
-    code,
+    organizationName: organization.name || organization.slug,
     label,
     maxUses: maxUsesValue ? Number(maxUsesValue) : null,
     expiresAt: expiresAtValue ? new Date(expiresAtValue) : null,
@@ -40,16 +38,12 @@ export default async function InvitesPage() {
 
   return (
     <div className="space-y-6">
-      <SectionTitle title="Invite Codes" description="Create school invite codes students can use in Telegram." />
+      <SectionTitle title="Invite Codes" description="Generate unique school invite codes students can use in Telegram." />
       <Card>
-        <form action={createInvite} className="grid gap-4 md:grid-cols-5">
+        <form action={createInvite} className="grid gap-4 md:grid-cols-4">
           <label className="text-sm font-medium">
             Label
             <input name="label" className="mt-1 w-full rounded-md border border-ink/10 px-3 py-2" placeholder="Grade 10 pilot" />
-          </label>
-          <label className="text-sm font-medium">
-            Code
-            <input name="code" className="mt-1 w-full rounded-md border border-ink/10 px-3 py-2 uppercase" placeholder="CEDARS2026" />
           </label>
           <label className="text-sm font-medium">
             Max uses
@@ -60,13 +54,13 @@ export default async function InvitesPage() {
             <input name="expiresAt" type="date" className="mt-1 w-full rounded-md border border-ink/10 px-3 py-2" />
           </label>
           <div className="flex items-end">
-            <Button className="w-full">Create invite</Button>
+            <Button className="w-full">Generate invite</Button>
           </div>
         </form>
       </Card>
 
       {invites.length === 0 ? (
-        <EmptyState title="No invite codes" description="Create one invite code for students to join your school bot flow." />
+        <EmptyState title="No invite codes" description="Generate one invite code for students to join your school bot flow." />
       ) : (
         <div className="overflow-hidden rounded-lg border border-ink/10 bg-white shadow-soft">
           <table className="w-full min-w-[760px] text-left text-sm">

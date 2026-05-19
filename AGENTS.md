@@ -66,7 +66,7 @@ Every agent must read this file before making changes. Update this file whenever
 
 ## Current Implemented Features
 
-- Public landing page at `/`
+- Modern animated public landing page at `/` with student-centered product narrative, Telegram companion preview, school dashboard preview, workflow, and safety positioning
 - Firebase email/password dashboard login at `/login`
 - Organization registration at `/register` and plan selection at `/register/plan`
 - Server session cookie creation at `/api/auth/session`
@@ -81,7 +81,7 @@ Every agent must read this file before making changes. Update this file whenever
   - `/dashboard/follow-ups`
   - `/dashboard/billing`
   - `/dashboard/settings`
-- Invite code creation and activation/deactivation
+- Organization-prefixed invite code generation and activation/deactivation
 - Admin student account deletion with organization-scoped data cleanup
 - Telegram webhook at `/api/telegram/webhook`
 - Telegram `/start`, `/help`, `/checkin`, `/plan`, `/reset`
@@ -246,7 +246,7 @@ Collections:
 - `organizationAdmins`
   - Maps Firebase Auth users to an organization and admin role.
 - `inviteCodes`
-  - Organization invite codes for Telegram student onboarding.
+  - Globally unique organization-prefixed invite codes for Telegram student onboarding. Dashboard-created codes are generated server-side from the organization name plus a random suffix and must not overwrite an existing code.
 - `students`
   - Telegram-linked student records scoped to an organization, including Telegram profile photo file IDs when available.
 - `studentOnboarding`
@@ -333,6 +333,8 @@ Security model:
 - Webhook endpoint: `POST /api/stripe/webhook`
   - Verifies Stripe signature with `STRIPE_WEBHOOK_SECRET`.
   - Stores event IDs in `stripeEvents`.
+  - Subscription current period end is read from the first subscription item, with a top-level fallback for older Stripe payloads.
+  - Subscription webhook events that map to internal `inactive` do not demote an organization; Checkout and invoice success events are the source of activation because Stripe webhooks can arrive out of order.
   - Handles:
     - `checkout.session.completed`
     - `customer.subscription.created`

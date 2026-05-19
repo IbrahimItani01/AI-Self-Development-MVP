@@ -16,7 +16,7 @@ Developers and coding agents should read `AGENTS.md` before working on this proj
 - Firestore data model for organizations, admins, invite codes, students, conversations, check-ins, growth plans, follow-up flags, usage logs, and Stripe event logs
 - Firebase Admin SDK server-side access
 - Telegram Bot API webhook at `/api/telegram/webhook`
-- Invite code onboarding flow with Lebanon-focused grade buttons, fixed check-in cadence buttons, and growth plan generation
+- Generated invite code onboarding flow with Lebanon-focused grade buttons, fixed check-in cadence buttons, and growth plan generation
 - AI chat, conversation summaries, check-in summaries, and cautious follow-up classification
 - Admin and Telegram student account deletion flows with associated data cleanup, including `/delete` and Telegram stop/block events when available
 - Stripe Checkout, Billing Portal, and webhook subscription tracking
@@ -188,7 +188,7 @@ The code is structured so those can be added later through separate service modu
 1. Seed demo data.
 2. Log in with the Firebase Auth user linked to `PLATFORM_OWNER_EMAIL`.
 3. Confirm dashboard overview, students, check-ins, follow-ups, billing, and settings render.
-4. Create an invite code from `/dashboard/invites`.
+4. Generate an invite code from `/dashboard/invites`.
 5. Start the Telegram bot and enter the invite code.
 6. Complete onboarding and confirm a growth plan is saved.
 7. Send a normal student reflection message and confirm assistant reply plus saved conversation summary.
