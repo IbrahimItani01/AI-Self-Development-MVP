@@ -81,7 +81,7 @@ Every agent must read this file before making changes. Update this file whenever
   - `/dashboard/follow-ups`
   - `/dashboard/billing`
   - `/dashboard/settings`
-- Invite code creation and activation/deactivation
+- Organization-prefixed invite code generation and activation/deactivation
 - Admin student account deletion with organization-scoped data cleanup
 - Telegram webhook at `/api/telegram/webhook`
 - Telegram `/start`, `/help`, `/checkin`, `/plan`, `/reset`
@@ -246,7 +246,7 @@ Collections:
 - `organizationAdmins`
   - Maps Firebase Auth users to an organization and admin role.
 - `inviteCodes`
-  - Organization invite codes for Telegram student onboarding.
+  - Globally unique organization-prefixed invite codes for Telegram student onboarding. Dashboard-created codes are generated server-side from the organization name plus a random suffix and must not overwrite an existing code.
 - `students`
   - Telegram-linked student records scoped to an organization, including Telegram profile photo file IDs when available.
 - `studentOnboarding`

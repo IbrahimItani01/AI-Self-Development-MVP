@@ -1,5 +1,5 @@
 import { adminDb, cleanUndefined, fromDoc, serverTimestamp, toFirestoreDate } from "@/lib/firebase/admin";
-import { normalizeInviteCode } from "@/lib/utils/ids";
+import { generatedInviteCode, normalizeInviteCode } from "@/lib/utils/ids";
 import type { InviteCode } from "@/types";
 
 export async function listInviteCodes(organizationId: string): Promise<InviteCode[]> {
@@ -13,25 +13,41 @@ export async function listInviteCodes(organizationId: string): Promise<InviteCod
 
 export async function createInviteCode(input: {
   organizationId: string;
-  code: string;
+  organizationName: string;
+  code?: string;
   label: string;
   maxUses: number | null;
   expiresAt?: Date | null;
 }): Promise<string> {
-  const code = normalizeInviteCode(input.code);
-  const docRef = adminDb().collection("inviteCodes").doc(code);
-  await docRef.set({
-    organizationId: input.organizationId,
-    code,
-    label: input.label,
-    maxUses: input.maxUses,
-    usedCount: 0,
-    active: true,
-    expiresAt: toFirestoreDate(input.expiresAt ?? null),
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-  return docRef.id;
+  const db = adminDb();
+  const usesManualCode = Boolean(input.code);
+
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const code = usesManualCode ? normalizeInviteCode(input.code!) : generatedInviteCode(input.organizationName);
+    const docId = await db.runTransaction(async (transaction) => {
+      const docRef = db.collection("inviteCodes").doc(code);
+      const existing = await transaction.get(docRef);
+      if (existing.exists) return null;
+
+      transaction.set(docRef, {
+        organizationId: input.organizationId,
+        code,
+        label: input.label,
+        maxUses: input.maxUses,
+        usedCount: 0,
+        active: true,
+        expiresAt: toFirestoreDate(input.expiresAt ?? null),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      return docRef.id;
+    });
+
+    if (docId) return docId;
+    if (usesManualCode) throw new Error("Invite code already exists.");
+  }
+
+  throw new Error("Could not generate a unique invite code. Please try again.");
 }
 
 export async function updateInviteCode(
