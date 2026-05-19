@@ -68,6 +68,7 @@ Every agent must read this file before making changes. Update this file whenever
 
 - Public landing page at `/`
 - Firebase email/password dashboard login at `/login`
+- Organization registration at `/register` and plan selection at `/register/plan`
 - Server session cookie creation at `/api/auth/session`
 - Session logout at `/api/auth/logout`
 - Protected dashboard routes under `/dashboard`
@@ -95,6 +96,7 @@ Every agent must read this file before making changes. Update this file whenever
 - Stripe Checkout session creation
 - Stripe Billing Portal session creation
 - Stripe webhook processing and duplicate-event logging
+- Firestore-backed Pro subscription plan configuration, student limits, and monthly token limits
 - AI usage logging and estimated cost tracking
 - Firestore rules and index definitions
 - Demo seed script
@@ -238,13 +240,15 @@ Rules:
 Collections:
 
 - `organizations`
-  - School organization, plan, access status, Stripe IDs, student limit. Stripe checkout currently uses one paid plan: `pro`.
+  - School organization, plan, access status, Stripe IDs, billing contact fields, student limit, and monthly token limit. Stripe checkout currently uses one paid plan: `pro`.
+- `subscriptionPlans`
+  - Firestore-backed plan cards, annual price, Stripe price ID, feature list, student limit, monthly token limit, active flag, and sort order.
 - `organizationAdmins`
   - Maps Firebase Auth users to an organization and admin role.
 - `inviteCodes`
   - Organization invite codes for Telegram student onboarding.
 - `students`
-  - Telegram-linked student records scoped to an organization.
+  - Telegram-linked student records scoped to an organization, including Telegram profile photo file IDs when available.
 - `studentOnboarding`
   - Onboarding answers and completion timestamp.
 - `conversations`
@@ -286,7 +290,7 @@ Security model:
 - New student flow:
   - Student sends `/start` or invite code.
   - Invite code is validated and consumed.
-  - Student record is created or linked by Telegram user ID.
+  - Student record is created or linked by Telegram user ID and Telegram profile photo metadata is stored when available.
   - Onboarding session begins.
 - Onboarding flow:
   - Preferred username/name

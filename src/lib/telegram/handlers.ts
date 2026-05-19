@@ -13,6 +13,7 @@ import {
   saveGrowthPlan,
   setBotSession,
   touchStudent,
+  updateStudentTelegramPhoto,
   updateConversationSummary,
   updateStudentProfile,
   upsertOnboarding,
@@ -29,7 +30,7 @@ import {
 } from "@/lib/ai";
 import { currentWeekStart } from "@/lib/utils/dates";
 import type { CheckInAnswers, Student, TelegramUpdate, TelegramUser } from "@/types";
-import { answerCallbackQuery, sendTelegramMessage } from "./bot";
+import { answerCallbackQuery, getTelegramProfilePhotoFileId, sendTelegramMessage } from "./bot";
 import {
   checkInCadenceOptions,
   focusAreaButtons,
@@ -176,6 +177,8 @@ async function handleBotChatMemberUpdate(telegramUserId: string, status: string)
 async function handleStart(user: TelegramUser, chatId: string, payload?: string) {
   const existing = await findStudentByTelegramUserId(String(user.id));
   if (existing) {
+    const telegramPhotoFileId = await getTelegramProfilePhotoFileId(String(user.id));
+    await updateStudentTelegramPhoto(existing.id, telegramPhotoFileId);
     const access = await canStudentUseBot(existing.id);
     if (!access.allowed) {
       await sendTelegramMessage({ chatId, text: access.reason || INACTIVE_ORG_MESSAGE });
@@ -207,7 +210,8 @@ async function processInviteCode(user: TelegramUser, chatId: string, text: strin
     return;
   }
 
-  const student = await createOrLinkStudent({ organizationId: invite.organizationId, telegramUser: user, chatId });
+  const telegramPhotoFileId = await getTelegramProfilePhotoFileId(String(user.id));
+  const student = await createOrLinkStudent({ organizationId: invite.organizationId, telegramUser: user, chatId, telegramPhotoFileId });
   await sendTelegramMessage({ chatId, text: `You are connected to your school. ${onboardingQuestion("preferredName")}` });
   await touchStudent(student.id);
 }

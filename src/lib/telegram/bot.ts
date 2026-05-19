@@ -45,6 +45,44 @@ export async function answerCallbackQuery(callbackQueryId: string, text?: string
   });
 }
 
+export async function getTelegramProfilePhotoFileId(telegramUserId: string): Promise<string | null> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return null;
+
+  const response = await fetch(`${telegramApi}/bot${token}/getUserProfilePhotos`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ user_id: Number(telegramUserId), limit: 1 }),
+  });
+  if (!response.ok) return null;
+
+  const data = (await response.json()) as {
+    ok?: boolean;
+    result?: { photos?: Array<Array<{ file_id: string; width: number; height: number }>> };
+  };
+  const firstPhotoSet = data.result?.photos?.[0];
+  if (!data.ok || !firstPhotoSet?.length) return null;
+
+  const largestPhoto = [...firstPhotoSet].sort((a, b) => b.width * b.height - a.width * a.height)[0];
+  return largestPhoto?.file_id ?? null;
+}
+
+export async function getTelegramFileUrl(fileId: string): Promise<string | null> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return null;
+
+  const response = await fetch(`${telegramApi}/bot${token}/getFile`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ file_id: fileId }),
+  });
+  if (!response.ok) return null;
+
+  const data = (await response.json()) as { ok?: boolean; result?: { file_path?: string } };
+  if (!data.ok || !data.result?.file_path) return null;
+  return `${telegramApi}/file/bot${token}/${data.result.file_path}`;
+}
+
 export function parseUpdate(raw: unknown): TelegramUpdate {
   return raw as TelegramUpdate;
 }

@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import type { Organization, SubscriptionPlan } from "@/types";
 
 export function stripeClient(): Stripe | null {
   if (!process.env.STRIPE_SECRET_KEY) return null;
@@ -7,6 +8,35 @@ export function stripeClient(): Stripe | null {
 
 export function proPriceId(): string | null {
   return process.env.STRIPE_PRICE_ID_PRO || null;
+}
+
+export function planStripePriceId(plan: SubscriptionPlan): string | null {
+  return plan.stripePriceId || (plan.id === "pro" ? proPriceId() : null);
+}
+
+export async function createStripeCustomerForOrganization(input: {
+  organizationName: string;
+  adminEmail: string;
+  adminName: string;
+  organizationId: string;
+}): Promise<string | null> {
+  const stripe = stripeClient();
+  if (!stripe) return null;
+
+  const customer = await stripe.customers.create({
+    name: input.organizationName,
+    email: input.adminEmail,
+    metadata: {
+      organizationId: input.organizationId,
+      adminName: input.adminName,
+    },
+  });
+
+  return customer.id;
+}
+
+export function canStartCheckout(organization: Organization): boolean {
+  return !["active", "trial"].includes(organization.status) || !organization.stripeSubscriptionId;
 }
 
 export function mapStripeStatus(status?: string): "active" | "trial" | "past_due" | "canceled" | "inactive" {

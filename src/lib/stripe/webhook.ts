@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { adminDb, serverTimestamp } from "@/lib/firebase/admin";
 import { updateOrganizationSubscription } from "@/lib/db/organizations";
+import { getSubscriptionPlan } from "@/lib/db/plans";
 import { mapStripeStatus, stripeClient } from "./server";
 
 export async function constructStripeEvent(body: string, signature: string | null): Promise<Stripe.Event> {
@@ -31,11 +32,14 @@ export async function processStripeEvent(event: Stripe.Event) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const organizationId = session.metadata?.organizationId;
+    const plan = await getSubscriptionPlan(session.metadata?.plan || "pro");
     if (organizationId) {
       await updateOrganizationSubscription({
         organizationId,
         status: "active",
-        plan: session.metadata?.plan === "pro" ? "pro" : "pilot",
+        plan: "pro",
+        maxStudents: plan?.studentLimit,
+        monthlyTokenLimit: plan?.monthlyTokenLimit,
         stripeCustomerId: typeof session.customer === "string" ? session.customer : session.customer?.id ?? null,
         stripeSubscriptionId: typeof session.subscription === "string" ? session.subscription : session.subscription?.id ?? null,
       });
@@ -49,11 +53,14 @@ export async function processStripeEvent(event: Stripe.Event) {
   ) {
     const subscription = event.data.object as Stripe.Subscription;
     const organizationId = subscription.metadata?.organizationId;
+    const plan = await getSubscriptionPlan(subscription.metadata?.plan || "pro");
     if (organizationId) {
       await updateOrganizationSubscription({
         organizationId,
         status: mapStripeStatus(subscription.status),
-        plan: subscription.metadata?.plan === "pro" ? "pro" : "pilot",
+        plan: "pro",
+        maxStudents: plan?.studentLimit,
+        monthlyTokenLimit: plan?.monthlyTokenLimit,
         stripeCustomerId: typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id,
         stripeSubscriptionId: subscription.id,
         subscriptionCurrentPeriodEnd: subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : null,

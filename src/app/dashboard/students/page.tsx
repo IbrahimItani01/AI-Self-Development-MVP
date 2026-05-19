@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { DeleteStudentButton } from "@/components/dashboard/delete-student-button";
 import { Badge, statusTone } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -32,6 +33,7 @@ export default async function StudentsPage() {
           <table className="w-full min-w-[900px] text-left text-sm">
             <thead className="bg-sand text-xs uppercase text-ink/50">
               <tr>
+                <th className="px-4 py-3">Photo</th>
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Telegram</th>
                 <th className="px-4 py-3">Grade/cohort</th>
@@ -46,6 +48,22 @@ export default async function StudentsPage() {
             <tbody className="divide-y divide-ink/10">
               {students.map((student) => (
                 <tr key={student.id}>
+                  <td className="px-4 py-3">
+                    {student.telegramPhotoFileId ? (
+                      <Image
+                        src={`/api/telegram/photo/${encodeURIComponent(student.telegramPhotoFileId)}`}
+                        alt={`${student.displayName} Telegram profile`}
+                        width={40}
+                        height={40}
+                        unoptimized
+                        className="h-10 w-10 rounded-full border border-ink/10 object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sand text-xs font-semibold text-ink/50">
+                        {student.displayName.slice(0, 1).toUpperCase()}
+                      </div>
+                    )}
+                  </td>
                   <td className="px-4 py-3 font-medium">{student.displayName}</td>
                   <td className="px-4 py-3 text-ink/60">{student.telegramUsername ? `@${student.telegramUsername}` : "Not set"}</td>
                   <td className="px-4 py-3 text-ink/60">{[student.gradeLevel, student.cohort].filter(Boolean).join(" / ") || "Not set"}</td>
