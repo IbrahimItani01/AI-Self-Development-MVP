@@ -8,6 +8,7 @@ export type FollowUpSeverity = "low" | "medium" | "high";
 export type FollowUpStatus = "open" | "reviewed" | "closed";
 export type FollowUpSource = "chat" | "check_in" | "low_engagement";
 export type UsageType = "chat" | "summary" | "check_in" | "classification" | "growth_plan";
+export type SubscriptionPlanId = "pro";
 
 export interface BaseDocument {
   id: string;
@@ -21,9 +22,32 @@ export interface Organization extends BaseDocument {
   status: OrganizationStatus;
   plan: OrganizationPlan;
   maxStudents: number;
+  monthlyTokenLimit?: number | null;
+  billingEmail?: string | null;
+  billingContactName?: string | null;
+  phone?: string | null;
+  website?: string | null;
+  address?: {
+    line1?: string | null;
+    city?: string | null;
+    country?: string | null;
+  } | null;
   stripeCustomerId?: string | null;
   stripeSubscriptionId?: string | null;
   subscriptionCurrentPeriodEnd?: Date | null;
+}
+
+export interface SubscriptionPlan extends BaseDocument {
+  name: string;
+  description: string;
+  stripePriceId: string;
+  annualPriceCents: number;
+  currency: string;
+  studentLimit: number;
+  monthlyTokenLimit: number;
+  features: string[];
+  active: boolean;
+  sortOrder: number;
 }
 
 export interface OrganizationAdmin extends BaseDocument {
@@ -48,6 +72,8 @@ export interface Student extends BaseDocument {
   organizationId: string;
   telegramUserId: string;
   telegramUsername?: string | null;
+  telegramPhotoUrl?: string | null;
+  telegramPhotoFileId?: string | null;
   firstName?: string | null;
   lastName?: string | null;
   displayName: string;
@@ -181,8 +207,17 @@ export interface TelegramCallbackQuery {
   data?: string;
 }
 
+export interface TelegramChatMemberUpdate {
+  chat: { id: number; type: string };
+  from: TelegramUser;
+  date: number;
+  old_chat_member?: { status: string };
+  new_chat_member: { status: string };
+}
+
 export interface TelegramUpdate {
   update_id: number;
   message?: TelegramMessage;
   callback_query?: TelegramCallbackQuery;
+  my_chat_member?: TelegramChatMemberUpdate;
 }

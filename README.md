@@ -12,12 +12,15 @@ Developers and coding agents should read `AGENTS.md` before working on this proj
 
 - Next.js App Router dashboard and public landing page
 - Firebase Authentication dashboard login with session cookies
+- Organization registration flow with Stripe customer creation and Firestore-backed Pro plan selection
 - Firestore data model for organizations, admins, invite codes, students, conversations, check-ins, growth plans, follow-up flags, usage logs, and Stripe event logs
 - Firebase Admin SDK server-side access
 - Telegram Bot API webhook at `/api/telegram/webhook`
 - Invite code onboarding flow with Lebanon-focused grade buttons, fixed check-in cadence buttons, and growth plan generation
 - AI chat, conversation summaries, check-in summaries, and cautious follow-up classification
+- Admin and Telegram student account deletion flows with associated data cleanup, including `/delete` and Telegram stop/block events when available
 - Stripe Checkout, Billing Portal, and webhook subscription tracking
+- Firestore-backed subscription plan features, student limits, and monthly AI token limits
 - AI usage and estimated cost logging
 - Firestore security rules and indexes
 - Demo seed script and Telegram webhook setup script
@@ -79,6 +82,7 @@ npm run seed:demo
 
 The seed script creates:
 
+- Pro subscription plan configuration in `subscriptionPlans/pro`
 - Organization: Cedar Learning School
 - Admin profile linked to the Firebase Auth user with `PLATFORM_OWNER_EMAIL` when found
 - Invite code: `CEDARS2026`
@@ -111,13 +115,14 @@ Test with `/start`, then use invite code `CEDARS2026`.
 
 1. Create one Stripe subscription product/price for the Pro plan.
 2. Set `STRIPE_SECRET_KEY` and `STRIPE_PRICE_ID_PRO`.
-3. Add a Stripe webhook endpoint:
+3. Run `npm run seed:demo` or create `subscriptionPlans/pro` in Firestore with the Pro plan limits, feature list, and Stripe price ID. Registration and billing plan cards read from this document.
+4. Add a Stripe webhook endpoint:
 
 ```text
 <APP_URL>/api/stripe/webhook
 ```
 
-4. Subscribe to these events:
+5. Subscribe to these events:
 
 - `checkout.session.completed`
 - `customer.subscription.created`
@@ -126,7 +131,7 @@ Test with `/start`, then use invite code `CEDARS2026`.
 - `invoice.paid`
 - `invoice.payment_failed`
 
-5. Set `STRIPE_WEBHOOK_SECRET`.
+6. Set `STRIPE_WEBHOOK_SECRET`.
 
 If Stripe is not configured, the dashboard shows a clear error instead of crashing. Demo organization status can be managed through seed data or Firestore.
 

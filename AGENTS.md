@@ -68,6 +68,7 @@ Every agent must read this file before making changes. Update this file whenever
 
 - Public landing page at `/`
 - Firebase email/password dashboard login at `/login`
+- Organization registration at `/register` and plan selection at `/register/plan`
 - Server session cookie creation at `/api/auth/session`
 - Session logout at `/api/auth/logout`
 - Protected dashboard routes under `/dashboard`
@@ -81,8 +82,10 @@ Every agent must read this file before making changes. Update this file whenever
   - `/dashboard/billing`
   - `/dashboard/settings`
 - Invite code creation and activation/deactivation
+- Admin student account deletion with organization-scoped data cleanup
 - Telegram webhook at `/api/telegram/webhook`
 - Telegram `/start`, `/help`, `/checkin`, `/plan`, `/reset`
+- Telegram `/delete` student account deletion confirmation flow
 - Telegram invite code onboarding
 - AI-generated growth plan
 - AI chat reply and conversation summary
@@ -93,6 +96,7 @@ Every agent must read this file before making changes. Update this file whenever
 - Stripe Checkout session creation
 - Stripe Billing Portal session creation
 - Stripe webhook processing and duplicate-event logging
+- Firestore-backed Pro subscription plan configuration, student limits, and monthly token limits
 - AI usage logging and estimated cost tracking
 - Firestore rules and index definitions
 - Demo seed script
@@ -236,13 +240,15 @@ Rules:
 Collections:
 
 - `organizations`
-  - School organization, plan, access status, Stripe IDs, student limit. Stripe checkout currently uses one paid plan: `pro`.
+  - School organization, plan, access status, Stripe IDs, billing contact fields, student limit, and monthly token limit. Stripe checkout currently uses one paid plan: `pro`.
+- `subscriptionPlans`
+  - Firestore-backed plan cards, annual price, Stripe price ID, feature list, student limit, monthly token limit, active flag, and sort order.
 - `organizationAdmins`
   - Maps Firebase Auth users to an organization and admin role.
 - `inviteCodes`
   - Organization invite codes for Telegram student onboarding.
 - `students`
-  - Telegram-linked student records scoped to an organization.
+  - Telegram-linked student records scoped to an organization, including Telegram profile photo file IDs when available.
 - `studentOnboarding`
   - Onboarding answers and completion timestamp.
 - `conversations`
@@ -280,10 +286,11 @@ Security model:
   - `/checkin`
   - `/plan`
   - `/reset`
+  - `/delete`
 - New student flow:
   - Student sends `/start` or invite code.
   - Invite code is validated and consumed.
-  - Student record is created or linked by Telegram user ID.
+  - Student record is created or linked by Telegram user ID and Telegram profile photo metadata is stored when available.
   - Onboarding session begins.
 - Onboarding flow:
   - Preferred username/name
@@ -307,6 +314,11 @@ Security model:
   - Next step
   - AI summary and suggested next step
   - Optional follow-up flag
+- Account deletion flow:
+  - `/delete` asks for explicit Telegram button confirmation.
+  - Confirmation deletes the student record and associated onboarding, growth plan, messages, conversations, check-ins, follow-up flags, usage logs, and bot session.
+  - Telegram `my_chat_member` updates with private-chat `kicked`/`left` status also trigger deletion when the student stops or blocks the bot.
+  - Telegram does not provide a reliable webhook when a student only clears chat history, so deletion must use `/delete`, dashboard removal, or a stop/block event that Telegram actually sends.
 
 ## Stripe Subscription Flow Summary
 
@@ -429,3 +441,4 @@ Manual checks:
 - Document the reason for any large architectural change.
 - Do not commit secrets or generated local artifacts.
 - Treat student data carefully in code, logs, prompts, and UI.
+- When changing student deletion behavior, keep dashboard deletion and Telegram self-deletion consistent and organization-scoped.

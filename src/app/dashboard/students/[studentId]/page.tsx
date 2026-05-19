@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { DeleteStudentButton } from "@/components/dashboard/delete-student-button";
 import { Badge, statusTone } from "@/components/ui/badge";
 import { Card, SectionTitle } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
@@ -6,6 +7,7 @@ import { getStudentDetail } from "@/lib/db/students";
 import { listStudentCheckIns } from "@/lib/db/checkIns";
 import { listStudentFollowUps } from "@/lib/db/followUps";
 import { formatRelative, formatShortDate } from "@/lib/utils/dates";
+import { deleteStudentFromDashboard } from "../actions";
 
 export default async function StudentDetailPage({ params }: { params: Promise<{ studentId: string }> }) {
   const { studentId } = await params;
@@ -107,6 +109,22 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
             ))}
           </div>
         </details>
+      </Card>
+
+      <Card className="border-red-200 bg-red-50/40">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="font-semibold text-red-800">Remove student account</h2>
+            <p className="mt-2 text-sm text-red-700">
+              Deletes this student and their onboarding, plan, messages, check-ins, follow-up flags, bot session, and usage logs for this organization.
+            </p>
+          </div>
+          <form action={deleteStudentFromDashboard}>
+            <input type="hidden" name="studentId" value={student.id} />
+            <input type="hidden" name="returnTo" value="/dashboard/students" />
+            <DeleteStudentButton studentName={student.displayName} />
+          </form>
+        </div>
       </Card>
     </div>
   );

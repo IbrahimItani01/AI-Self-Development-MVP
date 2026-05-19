@@ -16,6 +16,9 @@ export default function LoginPage() {
         <div className="mt-6">
           <LoginForm />
         </div>
+        <p className="mt-5 text-center text-sm text-ink/60">
+          New school? <Link href="/register" className="font-semibold text-wine">Create an organization account</Link>
+        </p>
       </Card>
     </main>
   );

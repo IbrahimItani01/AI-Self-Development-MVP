@@ -3,6 +3,7 @@ export const HELP_MESSAGE = `You can use:
 /plan - view your growth plan
 /help - available actions
 /reset - reset demo onboarding
+/delete - delete your student account and saved bot data
 
 You can also send a normal message whenever you want to reflect, get clarity, or choose a small next step.`;
 

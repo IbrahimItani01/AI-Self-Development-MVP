@@ -1,4 +1,5 @@
 import { adminDb, cleanUndefined, fromDoc, serverTimestamp } from "@/lib/firebase/admin";
+import { monthStart } from "@/lib/utils/dates";
 import type {
   Conversation,
   GrowthPlan,
@@ -24,7 +25,7 @@ export interface BotSession {
   organizationId?: string | null;
   telegramUserId: string;
   telegramChatId: string;
-  flow: "invite" | "onboarding" | "check_in" | "reset_confirm";
+  flow: "invite" | "onboarding" | "check_in" | "reset_confirm" | "delete_confirm";
   step: string;
   data: Record<string, unknown>;
   createdAt: Date | null;
@@ -51,9 +52,23 @@ export async function createOrLinkStudent(input: {
   organizationId: string;
   telegramUser: TelegramUser;
   chatId: string;
+  telegramPhotoFileId?: string | null;
 }): Promise<Student> {
   const existing = await findStudentByTelegramUserId(String(input.telegramUser.id));
-  if (existing) return existing;
+  if (existing) {
+    if (input.telegramPhotoFileId && input.telegramPhotoFileId !== existing.telegramPhotoFileId) {
+      await adminDb().collection("students").doc(existing.id).set(
+        {
+          telegramPhotoFileId: input.telegramPhotoFileId,
+          telegramPhotoUrl: `/api/telegram/photo/${encodeURIComponent(input.telegramPhotoFileId)}`,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true },
+      );
+      return { ...existing, telegramPhotoFileId: input.telegramPhotoFileId, telegramPhotoUrl: `/api/telegram/photo/${encodeURIComponent(input.telegramPhotoFileId)}` };
+    }
+    return existing;
+  }
 
   const ref = adminDb().collection("students").doc();
   const displayName =
@@ -64,6 +79,8 @@ export async function createOrLinkStudent(input: {
     organizationId: input.organizationId,
     telegramUserId: String(input.telegramUser.id),
     telegramUsername: input.telegramUser.username ?? null,
+    telegramPhotoFileId: input.telegramPhotoFileId ?? null,
+    telegramPhotoUrl: input.telegramPhotoFileId ? `/api/telegram/photo/${encodeURIComponent(input.telegramPhotoFileId)}` : null,
     firstName: input.telegramUser.first_name ?? null,
     lastName: input.telegramUser.last_name ?? null,
     displayName,
@@ -105,6 +122,18 @@ export async function updateStudentProfile(
 
 export async function touchStudent(studentId: string) {
   await adminDb().collection("students").doc(studentId).set({ lastInteractionAt: serverTimestamp(), updatedAt: serverTimestamp() }, { merge: true });
+}
+
+export async function updateStudentTelegramPhoto(studentId: string, telegramPhotoFileId: string | null) {
+  if (!telegramPhotoFileId) return;
+  await adminDb().collection("students").doc(studentId).set(
+    {
+      telegramPhotoFileId,
+      telegramPhotoUrl: `/api/telegram/photo/${encodeURIComponent(telegramPhotoFileId)}`,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
 }
 
 export async function upsertOnboarding(input: {
@@ -229,6 +258,54 @@ export async function getStudentDetail(organizationId: string, studentId: string
   return { student, growthPlan, conversation, recentMessages };
 }
 
+async function deleteQueryDocuments(query: FirebaseFirestore.Query, batchSize = 400): Promise<number> {
+  let deletedCount = 0;
+
+  while (true) {
+    const snap = await query.limit(batchSize).get();
+    if (snap.empty) return deletedCount;
+
+    const batch = adminDb().batch();
+    snap.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+    deletedCount += snap.size;
+
+    if (snap.size < batchSize) return deletedCount;
+  }
+}
+
+export async function deleteStudentAccount(input: {
+  organizationId: string;
+  studentId: string;
+}): Promise<{ deleted: boolean; telegramUserId?: string }> {
+  const db = adminDb();
+  const studentRef = db.collection("students").doc(input.studentId);
+  const studentDoc = await studentRef.get();
+  if (!studentDoc.exists || studentDoc.data()?.organizationId !== input.organizationId) {
+    return { deleted: false };
+  }
+
+  const student = fromDoc<Student>(studentDoc);
+  const conversationsSnap = await db.collection("conversations").where("studentId", "==", input.studentId).get();
+
+  await Promise.all([
+    deleteQueryDocuments(db.collection("messages").where("studentId", "==", input.studentId)),
+    deleteQueryDocuments(db.collection("checkIns").where("studentId", "==", input.studentId)),
+    deleteQueryDocuments(db.collection("followUpFlags").where("studentId", "==", input.studentId)),
+    deleteQueryDocuments(db.collection("usageLogs").where("studentId", "==", input.studentId)),
+  ]);
+
+  const batch = db.batch();
+  conversationsSnap.docs.forEach((doc) => batch.delete(doc.ref));
+  batch.delete(db.collection("studentOnboarding").doc(input.studentId));
+  batch.delete(db.collection("growthPlans").doc(input.studentId));
+  batch.delete(db.collection("botSessions").doc(student.telegramUserId));
+  batch.delete(studentRef);
+  await batch.commit();
+
+  return { deleted: true, telegramUserId: student.telegramUserId };
+}
+
 export async function canStudentUseBot(studentId: string): Promise<{ allowed: boolean; reason?: string; organization?: Organization }> {
   const doc = await adminDb().collection("students").doc(studentId).get();
   if (!doc.exists) return { allowed: false, reason: "Student not found" };
@@ -237,6 +314,24 @@ export async function canStudentUseBot(studentId: string): Promise<{ allowed: bo
   if (!organization) return { allowed: false, reason: "School account not found" };
   if (!["active", "trial"].includes(organization.status)) {
     return { allowed: false, reason: "Your school account is currently inactive. Please contact your school coordinator.", organization };
+  }
+  if (organization.monthlyTokenLimit) {
+    const usageSnap = await adminDb()
+      .collection("usageLogs")
+      .where("organizationId", "==", organization.id)
+      .where("createdAt", ">=", monthStart())
+      .get();
+    const monthlyTokens = usageSnap.docs.reduce((sum, doc) => {
+      const data = doc.data();
+      return sum + Number(data.inputTokens ?? 0) + Number(data.outputTokens ?? 0);
+    }, 0);
+    if (monthlyTokens >= organization.monthlyTokenLimit) {
+      return {
+        allowed: false,
+        reason: "Your school's monthly AI usage limit has been reached. Please contact your school coordinator.",
+        organization,
+      };
+    }
   }
   return { allowed: true, organization };
 }

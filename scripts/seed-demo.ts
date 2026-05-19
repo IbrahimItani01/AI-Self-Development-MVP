@@ -9,6 +9,27 @@ async function main() {
   const organizationId = "cedar-learning-school";
   const ownerEmail = process.env.PLATFORM_OWNER_EMAIL || "owner@example.com";
   let firebaseUid = process.env.PLATFORM_OWNER_UID || "replace-with-firebase-uid";
+  const proPlan = {
+    name: "Pro",
+    description: "Annual school plan for a structured student development pilot with Telegram access, dashboard visibility, and AI usage controls.",
+    stripePriceId: process.env.STRIPE_PRICE_ID_PRO || "",
+    annualPriceCents: 150000,
+    currency: "usd",
+    studentLimit: 150,
+    monthlyTokenLimit: 500000,
+    features: [
+      "Telegram bot access for enrolled students",
+      "School dashboard with student progress summaries",
+      "Weekly check-ins and growth plans",
+      "Human follow-up flags for school review",
+      "AI usage tracking with monthly token limits",
+      "Invite code onboarding for one school organization",
+    ],
+    active: true,
+    sortOrder: 1,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
 
   try {
     const user = await adminAuth().getUserByEmail(ownerEmail);
@@ -17,13 +38,21 @@ async function main() {
     console.log(`No Firebase Auth user found for ${ownerEmail}. Using placeholder UID: ${firebaseUid}`);
   }
 
+  await db.collection("subscriptionPlans").doc("pro").set(proPlan, { merge: true });
+
   await db.collection("organizations").doc(organizationId).set(
     {
       name: "Cedar Learning School",
       slug: "cedar-learning-school",
-      status: "trial",
-      plan: "pilot",
-      maxStudents: 150,
+      status: "active",
+      plan: "pro",
+      maxStudents: proPlan.studentLimit,
+      monthlyTokenLimit: proPlan.monthlyTokenLimit,
+      billingEmail: ownerEmail.toLowerCase(),
+      billingContactName: "Demo School Admin",
+      phone: null,
+      website: null,
+      address: null,
       stripeCustomerId: null,
       stripeSubscriptionId: null,
       subscriptionCurrentPeriodEnd: toFirestoreDate(new Date(Date.now() + 1000 * 60 * 60 * 24 * 30)),

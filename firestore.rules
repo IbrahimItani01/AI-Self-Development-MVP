@@ -21,6 +21,11 @@ service cloud.firestore {
       allow create, delete: if false;
     }
 
+    match /subscriptionPlans/{planId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
     match /organizationAdmins/{adminId} {
       allow read: if signedIn() && (adminId == request.auth.uid || isOrgAdmin(resource.data.organizationId));
       allow write: if false;

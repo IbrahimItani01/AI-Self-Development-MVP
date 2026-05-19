@@ -28,9 +28,10 @@ export function LandingPage() {
             Helping schools support student growth through AI-guided reflection, weekly check-ins, progress summaries, and human follow-up signals.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <LinkButton href="/login">
-              Login to School Dashboard <ArrowRight size={17} />
+            <LinkButton href="/register">
+              Get started <ArrowRight size={17} />
             </LinkButton>
+            <GhostLink href="/login">Login to School Dashboard</GhostLink>
             <GhostLink href="#demo">View Demo Flow</GhostLink>
           </div>
         </div>

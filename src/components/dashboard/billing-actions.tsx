@@ -3,7 +3,17 @@
 import { useState } from "react";
 import { Button, SecondaryButton } from "@/components/ui/button";
 
-export function BillingActions({ organizationId }: { organizationId: string }) {
+export function BillingActions({
+  organizationId,
+  planId = "pro",
+  canStartCheckout,
+  hasStripeCustomer,
+}: {
+  organizationId: string;
+  planId?: string;
+  canStartCheckout: boolean;
+  hasStripeCustomer: boolean;
+}) {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -13,7 +23,7 @@ export function BillingActions({ organizationId }: { organizationId: string }) {
     const response = await fetch("/api/stripe/create-checkout-session", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ organizationId }),
+      body: JSON.stringify({ organizationId, planId }),
     });
     const data = (await response.json()) as { url?: string; error?: string };
     setLoading(null);
@@ -40,10 +50,12 @@ export function BillingActions({ organizationId }: { organizationId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-3">
-        <Button disabled={Boolean(loading)} onClick={openCheckout}>
-          {loading === "pro" ? "Opening..." : "Start Pro Plan"}
-        </Button>
-        <SecondaryButton disabled={Boolean(loading)} onClick={openPortal}>
+        {canStartCheckout ? (
+          <Button disabled={Boolean(loading)} onClick={openCheckout}>
+            {loading === "pro" ? "Opening..." : "Complete Pro payment"}
+          </Button>
+        ) : null}
+        <SecondaryButton disabled={Boolean(loading) || !hasStripeCustomer} onClick={openPortal}>
           {loading === "portal" ? "Opening..." : "Open Billing Portal"}
         </SecondaryButton>
       </div>
