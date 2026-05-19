@@ -3,6 +3,7 @@ import {
   canStudentUseBot,
   clearBotSession,
   createOrLinkStudent,
+  deleteStudentAccount,
   findStudentByTelegramUserId,
   getBotSession,
   getOrCreateConversation,
@@ -47,6 +48,11 @@ const checkInPrompts: Record<keyof CheckInAnswers, string> = {
 };
 
 export async function handleTelegramUpdate(update: TelegramUpdate) {
+  if (update.my_chat_member?.chat.type === "private") {
+    await handleBotChatMemberUpdate(String(update.my_chat_member.chat.id), update.my_chat_member.new_chat_member.status);
+    return;
+  }
+
   if (update.callback_query) {
     await handleCallback(update.callback_query.from, String(update.callback_query.message?.chat.id ?? ""), update.callback_query.id, update.callback_query.data);
     return;
@@ -93,6 +99,26 @@ export async function handleTelegramUpdate(update: TelegramUpdate) {
     return;
   }
 
+  if (text === "/delete" || text === "/delete_account") {
+    await setBotSession({
+      telegramUserId,
+      telegramChatId: chatId,
+      studentId: student.id,
+      organizationId: student.organizationId,
+      flow: "delete_confirm",
+      step: "confirm",
+      data: {},
+    });
+    await sendTelegramMessage({
+      chatId,
+      text: "Delete your student account and saved bot data? This removes your onboarding, plan, messages, check-ins, and follow-up flags from the school dashboard.",
+      replyMarkup: {
+        inline_keyboard: [[{ text: "Delete my account", callback_data: "delete:yes" }, { text: "Cancel", callback_data: "delete:no" }]],
+      },
+    });
+    return;
+  }
+
   const access = await canStudentUseBot(student.id);
   if (!access.allowed) {
     await sendTelegramMessage({ chatId, text: access.reason || INACTIVE_ORG_MESSAGE });
@@ -134,6 +160,17 @@ export async function handleTelegramUpdate(update: TelegramUpdate) {
   }
 
   await handleStudentChat(student, chatId, text);
+}
+
+async function handleBotChatMemberUpdate(telegramUserId: string, status: string) {
+  if (!["kicked", "left"].includes(status)) return;
+  const student = await findStudentByTelegramUserId(telegramUserId);
+  if (!student) return;
+
+  await deleteStudentAccount({
+    organizationId: student.organizationId,
+    studentId: student.id,
+  });
 }
 
 async function handleStart(user: TelegramUser, chatId: string, payload?: string) {
@@ -202,6 +239,24 @@ async function handleCallback(user: TelegramUser, chatId: string, callbackId: st
   if (data === "reset:no") {
     await clearBotSession(String(user.id));
     await sendTelegramMessage({ chatId, text: "Reset canceled." });
+    return;
+  }
+
+  if (data === "delete:no") {
+    await clearBotSession(String(user.id));
+    await sendTelegramMessage({ chatId, text: "Account deletion canceled." });
+    return;
+  }
+
+  if (data === "delete:yes") {
+    await sendTelegramMessage({
+      chatId,
+      text: "Your student account and saved bot data have been deleted. If you want to join again later, send /start and use your school invite code.",
+    });
+    await deleteStudentAccount({
+      organizationId: student.organizationId,
+      studentId: student.id,
+    });
     return;
   }
 

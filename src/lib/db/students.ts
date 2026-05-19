@@ -24,7 +24,7 @@ export interface BotSession {
   organizationId?: string | null;
   telegramUserId: string;
   telegramChatId: string;
-  flow: "invite" | "onboarding" | "check_in" | "reset_confirm";
+  flow: "invite" | "onboarding" | "check_in" | "reset_confirm" | "delete_confirm";
   step: string;
   data: Record<string, unknown>;
   createdAt: Date | null;
@@ -227,6 +227,54 @@ export async function getStudentDetail(organizationId: string, studentId: string
     conversation ? listRecentMessages(conversation.id, 12) : Promise.resolve([]),
   ]);
   return { student, growthPlan, conversation, recentMessages };
+}
+
+async function deleteQueryDocuments(query: FirebaseFirestore.Query, batchSize = 400): Promise<number> {
+  let deletedCount = 0;
+
+  while (true) {
+    const snap = await query.limit(batchSize).get();
+    if (snap.empty) return deletedCount;
+
+    const batch = adminDb().batch();
+    snap.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+    deletedCount += snap.size;
+
+    if (snap.size < batchSize) return deletedCount;
+  }
+}
+
+export async function deleteStudentAccount(input: {
+  organizationId: string;
+  studentId: string;
+}): Promise<{ deleted: boolean; telegramUserId?: string }> {
+  const db = adminDb();
+  const studentRef = db.collection("students").doc(input.studentId);
+  const studentDoc = await studentRef.get();
+  if (!studentDoc.exists || studentDoc.data()?.organizationId !== input.organizationId) {
+    return { deleted: false };
+  }
+
+  const student = fromDoc<Student>(studentDoc);
+  const conversationsSnap = await db.collection("conversations").where("studentId", "==", input.studentId).get();
+
+  await Promise.all([
+    deleteQueryDocuments(db.collection("messages").where("studentId", "==", input.studentId)),
+    deleteQueryDocuments(db.collection("checkIns").where("studentId", "==", input.studentId)),
+    deleteQueryDocuments(db.collection("followUpFlags").where("studentId", "==", input.studentId)),
+    deleteQueryDocuments(db.collection("usageLogs").where("studentId", "==", input.studentId)),
+  ]);
+
+  const batch = db.batch();
+  conversationsSnap.docs.forEach((doc) => batch.delete(doc.ref));
+  batch.delete(db.collection("studentOnboarding").doc(input.studentId));
+  batch.delete(db.collection("growthPlans").doc(input.studentId));
+  batch.delete(db.collection("botSessions").doc(student.telegramUserId));
+  batch.delete(studentRef);
+  await batch.commit();
+
+  return { deleted: true, telegramUserId: student.telegramUserId };
 }
 
 export async function canStudentUseBot(studentId: string): Promise<{ allowed: boolean; reason?: string; organization?: Organization }> {

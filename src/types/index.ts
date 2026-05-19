@@ -181,8 +181,17 @@ export interface TelegramCallbackQuery {
   data?: string;
 }
 
+export interface TelegramChatMemberUpdate {
+  chat: { id: number; type: string };
+  from: TelegramUser;
+  date: number;
+  old_chat_member?: { status: string };
+  new_chat_member: { status: string };
+}
+
 export interface TelegramUpdate {
   update_id: number;
   message?: TelegramMessage;
   callback_query?: TelegramCallbackQuery;
+  my_chat_member?: TelegramChatMemberUpdate;
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DeleteStudentButton } from "@/components/dashboard/delete-student-button";
 import { Badge, statusTone } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SectionTitle } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import { listStudents } from "@/lib/db/students";
 import { listRecentCheckIns } from "@/lib/db/checkIns";
 import { listFollowUpFlags } from "@/lib/db/followUps";
 import { formatRelative } from "@/lib/utils/dates";
+import { deleteStudentFromDashboard } from "./actions";
 
 export default async function StudentsPage() {
   const { organization } = await requireAdmin();
@@ -38,7 +40,7 @@ export default async function StudentsPage() {
                 <th className="px-4 py-3">Last interaction</th>
                 <th className="px-4 py-3">Check-ins</th>
                 <th className="px-4 py-3">Follow-up</th>
-                <th className="px-4 py-3">Details</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-ink/10">
@@ -55,7 +57,14 @@ export default async function StudentsPage() {
                     <Badge tone={openFlags.has(student.id) ? "warn" : "good"}>{openFlags.has(student.id) ? "Open" : "Clear"}</Badge>
                   </td>
                   <td className="px-4 py-3">
-                    <Link href={`/dashboard/students/${student.id}`} className="font-semibold text-wine">View</Link>
+                    <div className="flex items-center gap-3">
+                      <Link href={`/dashboard/students/${student.id}`} className="font-semibold text-wine">View</Link>
+                      <form action={deleteStudentFromDashboard}>
+                        <input type="hidden" name="studentId" value={student.id} />
+                        <input type="hidden" name="returnTo" value="/dashboard/students" />
+                        <DeleteStudentButton studentName={student.displayName} />
+                      </form>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -81,8 +81,10 @@ Every agent must read this file before making changes. Update this file whenever
   - `/dashboard/billing`
   - `/dashboard/settings`
 - Invite code creation and activation/deactivation
+- Admin student account deletion with organization-scoped data cleanup
 - Telegram webhook at `/api/telegram/webhook`
 - Telegram `/start`, `/help`, `/checkin`, `/plan`, `/reset`
+- Telegram `/delete` student account deletion confirmation flow
 - Telegram invite code onboarding
 - AI-generated growth plan
 - AI chat reply and conversation summary
@@ -280,6 +282,7 @@ Security model:
   - `/checkin`
   - `/plan`
   - `/reset`
+  - `/delete`
 - New student flow:
   - Student sends `/start` or invite code.
   - Invite code is validated and consumed.
@@ -307,6 +310,11 @@ Security model:
   - Next step
   - AI summary and suggested next step
   - Optional follow-up flag
+- Account deletion flow:
+  - `/delete` asks for explicit Telegram button confirmation.
+  - Confirmation deletes the student record and associated onboarding, growth plan, messages, conversations, check-ins, follow-up flags, usage logs, and bot session.
+  - Telegram `my_chat_member` updates with private-chat `kicked`/`left` status also trigger deletion when the student stops or blocks the bot.
+  - Telegram does not provide a reliable webhook when a student only clears chat history, so deletion must use `/delete`, dashboard removal, or a stop/block event that Telegram actually sends.
 
 ## Stripe Subscription Flow Summary
 
@@ -429,3 +437,4 @@ Manual checks:
 - Document the reason for any large architectural change.
 - Do not commit secrets or generated local artifacts.
 - Treat student data carefully in code, logs, prompts, and UI.
+- When changing student deletion behavior, keep dashboard deletion and Telegram self-deletion consistent and organization-scoped.

@@ -17,6 +17,7 @@ Developers and coding agents should read `AGENTS.md` before working on this proj
 - Telegram Bot API webhook at `/api/telegram/webhook`
 - Invite code onboarding flow with Lebanon-focused grade buttons, fixed check-in cadence buttons, and growth plan generation
 - AI chat, conversation summaries, check-in summaries, and cautious follow-up classification
+- Admin and Telegram student account deletion flows with associated data cleanup, including `/delete` and Telegram stop/block events when available
 - Stripe Checkout, Billing Portal, and webhook subscription tracking
 - AI usage and estimated cost logging
 - Firestore security rules and indexes
