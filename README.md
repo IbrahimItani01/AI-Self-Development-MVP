@@ -118,14 +118,20 @@ Test with `/start`, then use invite code `CEDARS2026`.
 
 1. Create one Stripe subscription product/price for the Pro plan.
 2. Set `STRIPE_SECRET_KEY` and `STRIPE_PRICE_ID_PRO`.
-3. Run `npm run seed:demo` or create `subscriptionPlans/pro` in Firestore with the Pro plan limits, feature list, and Stripe price ID. Registration and billing plan cards read from this document.
-4. Add a Stripe webhook endpoint:
+3. In Stripe Branding settings, match the hosted Billing Portal and Stripe-hosted surfaces to the app palette:
+   - Background color: `#F7F4EE`
+   - Button/brand color: `#1F6F68`
+   - Accent color: `#8B3A62`
+   - Font: Inter or Stripe default
+   - Shape: rounded
+4. Run `npm run seed:demo` or create `subscriptionPlans/pro` in Firestore with the Pro plan limits, feature list, and Stripe price ID. Registration and billing plan cards read from this document.
+5. Add a Stripe webhook endpoint:
 
 ```text
 <APP_URL>/api/stripe/webhook
 ```
 
-5. Subscribe to these events:
+6. Subscribe to these events:
 
 - `checkout.session.completed`
 - `customer.subscription.created`
@@ -134,9 +140,9 @@ Test with `/start`, then use invite code `CEDARS2026`.
 - `invoice.paid`
 - `invoice.payment_failed`
 
-6. Set `STRIPE_WEBHOOK_SECRET`.
+7. Set `STRIPE_WEBHOOK_SECRET`.
 
-If Stripe is not configured, the dashboard shows a clear error instead of crashing. Demo organization status can be managed through seed data or Firestore.
+Checkout Sessions set per-session branding in code with the same palette. If Stripe is not configured, the dashboard shows a clear error instead of crashing. Demo organization status can be managed through seed data or Firestore.
 
 ## Run locally
 

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getAdminContext } from "@/lib/auth/requireAdmin";
 import { getSubscriptionPlan } from "@/lib/db/plans";
-import { canStartCheckout, planStripePriceId, stripeClient } from "@/lib/stripe/server";
+import { STRIPE_CHECKOUT_BRANDING, canStartCheckout, planStripePriceId, stripeClient } from "@/lib/stripe/server";
 
 const schema = z.object({
   organizationId: z.string().min(1),
@@ -32,6 +32,7 @@ export async function POST(request: Request) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
+    branding_settings: STRIPE_CHECKOUT_BRANDING,
     line_items: [{ price, quantity: 1 }],
     success_url: `${appUrl}/dashboard?checkout=success`,
     cancel_url: `${appUrl}/dashboard/billing?checkout=cancelled`,

@@ -1,9 +1,19 @@
 import Stripe from "stripe";
 import type { Organization, SubscriptionPlan } from "@/types";
 
+type CheckoutSessionCreateParams = NonNullable<Parameters<Stripe["checkout"]["sessions"]["create"]>[0]>;
+
+export const STRIPE_CHECKOUT_BRANDING = {
+  background_color: "#F7F4EE",
+  border_style: "rounded",
+  button_color: "#1F6F68",
+  display_name: "AI Student Development Companion",
+  font_family: "inter",
+} satisfies NonNullable<CheckoutSessionCreateParams["branding_settings"]>;
+
 export function stripeClient(): Stripe | null {
   if (!process.env.STRIPE_SECRET_KEY) return null;
-  return new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-02-24.acacia" });
+  return new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2026-04-22.dahlia" });
 }
 
 export function proPriceId(): string | null {

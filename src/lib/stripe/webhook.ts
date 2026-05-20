@@ -32,6 +32,17 @@ function subscriptionCurrentPeriodEnd(
 	return periodEnd ? new Date(periodEnd * 1000) : null;
 }
 
+function invoiceSubscriptionId(invoice: Stripe.Invoice): string | undefined {
+	const currentSubscription = invoice.parent?.subscription_details?.subscription;
+	if (typeof currentSubscription === "string") return currentSubscription;
+	if (currentSubscription?.id) return currentSubscription.id;
+
+	const legacySubscription = (invoice as unknown as { subscription?: string | Stripe.Subscription }).subscription;
+	return typeof legacySubscription === "string"
+		? legacySubscription
+		: legacySubscription?.id;
+}
+
 export async function processStripeEvent(event: Stripe.Event) {
 	const db = adminDb();
 	const eventRef = db.collection("stripeEvents").doc(event.id);
@@ -105,10 +116,7 @@ export async function processStripeEvent(event: Stripe.Event) {
 		event.type === "invoice.payment_failed"
 	) {
 		const invoice = event.data.object as Stripe.Invoice;
-		const subscriptionId =
-			typeof invoice.subscription === "string"
-				? invoice.subscription
-				: invoice.subscription?.id;
+		const subscriptionId = invoiceSubscriptionId(invoice);
 		if (subscriptionId) {
 			const orgSnap = await db
 				.collection("organizations")

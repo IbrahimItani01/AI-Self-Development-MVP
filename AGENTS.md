@@ -96,6 +96,7 @@ Every agent must read this file before making changes. Update this file whenever
 - Follow-up classification and flag creation
 - Follow-up status updates from dashboard
 - Stripe Checkout session creation
+- Stripe Checkout per-session branding matched to the shared app palette
 - Stripe Billing Portal session creation
 - Stripe webhook processing and duplicate-event logging
 - Firestore-backed Pro subscription plan configuration, student limits, and monthly token limits
@@ -353,10 +354,12 @@ Security model:
   - Requires authenticated school admin.
   - Requires matching `organizationId`.
   - Uses `STRIPE_PRICE_ID_PRO`.
+  - Applies `STRIPE_CHECKOUT_BRANDING` from `src/lib/stripe/server.ts` so Checkout uses the app palette.
   - Adds `organizationId` and `plan: "pro"` metadata.
 - Billing portal endpoint: `POST /api/stripe/create-billing-portal-session`
   - Requires authenticated school admin.
   - Requires linked Stripe customer ID.
+  - Billing Portal color and shape customization is managed in Stripe Dashboard account Branding settings.
 - Webhook endpoint: `POST /api/stripe/webhook`
   - Verifies Stripe signature with `STRIPE_WEBHOOK_SECRET`.
   - Stores event IDs in `stripeEvents`.
