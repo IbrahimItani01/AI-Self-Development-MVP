@@ -9,15 +9,59 @@ You can also send a normal message whenever you want to reflect, get clarity, or
 
 export const INACTIVE_ORG_MESSAGE = "Your school account is currently inactive. Please contact your school coordinator.";
 
-export function onboardingQuestion(step: string): string {
+type QuestionContext = {
+  displayName?: string | null;
+  focusArea?: string | null;
+  mainGoal?: string | null;
+  cadence?: string | null;
+  answers?: Record<string, unknown>;
+};
+
+function textAnswer(answers: Record<string, unknown> | undefined, key: string): string | null {
+  const value = answers?.[key];
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function shortReference(value: string | null | undefined, fallback: string): string {
+  if (!value) return fallback;
+  return value.length > 90 ? `${value.slice(0, 87).trim()}...` : value;
+}
+
+export function onboardingQuestion(step: string, context: QuestionContext = {}): string {
+  const focusArea = textAnswer(context.answers, "focusArea") ?? context.focusArea;
+  const mainChallenge = textAnswer(context.answers, "mainChallenge") ?? context.mainGoal;
   const questions: Record<string, string> = {
     preferredName: "What username would you like me to use? You can send your first name, nickname, or school username.",
     gradeLevel: "Which Lebanese school grade are you in? Choose the closest option.",
-    focusArea: "What area would you like to improve?",
-    mainChallenge: "What is the main challenge you want help thinking through?\n\nExample: I procrastinate before exams, or I am unsure what major fits me.",
-    progressDefinition: "What would progress look like for you in the next 30 days?\n\nExample: I finish homework earlier 3 days a week, or I feel clearer about my next academic step.",
+    focusArea: "What area would you like to focus on first? You can change direction later.",
+    mainChallenge: focusArea
+      ? `For ${focusArea.toLowerCase()}, what is the main challenge you want help thinking through right now?\n\nExample: I procrastinate before exams, or I am unsure what major fits me.`
+      : "What is the main challenge you want help thinking through right now?\n\nExample: I procrastinate before exams, or I am unsure what major fits me.",
+    progressDefinition: mainChallenge
+      ? `What would progress look like for "${shortReference(mainChallenge, "this")}" over the next week or few weeks?\n\nChoose the time horizon that feels useful to you.`
+      : "What would progress look like over the next week or few weeks?\n\nChoose the time horizon that feels useful to you. Example: I finish homework earlier 3 days this week, or I feel clearer about my next academic step.",
     checkInCadence: "How often would you like a short check-in? Choose one option.",
   };
+  return questions[step] ?? "Tell me a little more.";
+}
+
+export function checkInQuestion(step: string, context: QuestionContext = {}): string {
+  const focus = shortReference(context.focusArea, "your focus area");
+  const goal = shortReference(context.mainGoal, "your current goal");
+  const progress = textAnswer(context.answers, "progress");
+  const difficulty = textAnswer(context.answers, "difficulty");
+
+  const questions: Record<string, string> = {
+    progress: `Quick check-in on ${focus}: what progress have you made since your last reflection?`,
+    difficulty: progress
+      ? `Nice. Looking at that progress, what felt difficult or got in the way?`
+      : `What felt difficult or got in the way of ${goal}?`,
+    insight: difficulty
+      ? `What did that teach you about yourself, your habits, or what support you may need?`
+      : "What did you learn about yourself this week?",
+    nextStep: `What is one small next step that would move you closer to ${goal}?`,
+  };
+
   return questions[step] ?? "Tell me a little more.";
 }
 

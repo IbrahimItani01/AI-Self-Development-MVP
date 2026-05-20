@@ -92,7 +92,7 @@ Every agent must read this file before making changes. Update this file whenever
 - AI-generated growth plan
 - AI chat reply with function-tool human follow-up flagging and conversation summary
 - Shared AI response policy with grade-aware tone and output token caps
-- Weekly check-in flow with plain-text AI summary and suggested next step
+- Context-aware Telegram onboarding and check-in prompts with plain-text AI summary and suggested next step
 - Automated cadence-based check-in reminders and missed-check-in low-engagement follow-up flags via `/api/cron/check-ins`
 - Follow-up classification and flag creation
 - Follow-up status updates from dashboard
@@ -320,7 +320,7 @@ Security model:
   - Lebanon-focused grade selection through Telegram inline buttons
   - Focus area
   - Main challenge
-  - 30-day progress definition
+  - Student-defined short-term progress definition, allowing weekly or multi-week goals
   - Check-in cadence through fixed Telegram inline button values
   - AI growth plan generation
   - Save growth plan and mark onboarding complete
@@ -334,10 +334,7 @@ Security model:
   - Assistant reply is saved and sent back.
   - Conversation summary runs after the reply, and the separate follow-up classifier remains a fallback when the chat AI did not request the tool.
 - Check-in flow:
-  - Progress
-  - Difficulty
-  - Insight
-  - Next step
+  - Progress, difficulty, insight, and next-step questions are context-aware and reference the student's focus area, current goal, and earlier answers where useful.
   - AI summary and suggested next step are generated as strict JSON and saved/rendered as clean plain text, without markdown labels or asterisks.
   - Optional follow-up flag
 - Scheduled check-in automation:
