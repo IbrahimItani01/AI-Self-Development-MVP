@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { listRecentCheckIns } from "@/lib/db/checkIns";
 import { listStudents } from "@/lib/db/students";
 import { formatShortDate } from "@/lib/utils/dates";
+import { cleanAIGeneratedText } from "@/lib/utils/text";
 
 export default async function CheckInsPage() {
   const { organization } = await requireAdmin();
@@ -30,21 +31,30 @@ export default async function CheckInsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-ink/10">
-              {checkIns.map((checkIn) => (
-                <tr key={checkIn.id} className="align-top">
-                  <td className="px-4 py-3 font-medium">
-                    <Link className="text-primary" href={`/dashboard/students/${checkIn.studentId}`}>
-                      {names.get(checkIn.studentId) || "Student"}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-ink/60">{formatShortDate(checkIn.createdAt)}</td>
-                  <td className="max-w-md px-4 py-3 text-ink/70">{checkIn.aiSummary}</td>
-                  <td className="max-w-sm px-4 py-3 text-ink/70">{checkIn.suggestedNextStep}</td>
-                  <td className="px-4 py-3">
-                    <Badge tone={checkIn.followUpRecommended ? "warn" : "good"}>{checkIn.followUpRecommended ? "Recommended" : "No signal"}</Badge>
-                  </td>
-                </tr>
-              ))}
+              {checkIns.map((checkIn) => {
+                const summary = cleanAIGeneratedText(checkIn.aiSummary);
+                const suggestedNextStep = cleanAIGeneratedText(checkIn.suggestedNextStep);
+
+                return (
+                  <tr key={checkIn.id} className="align-top">
+                    <td className="px-4 py-3 font-medium">
+                      <Link className="text-primary" href={`/dashboard/students/${checkIn.studentId}`}>
+                        {names.get(checkIn.studentId) || "Student"}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-ink/60">{formatShortDate(checkIn.createdAt)}</td>
+                    <td className="max-w-md px-4 py-3">
+                      <p className="whitespace-pre-line rounded-md bg-canvas/60 px-3 py-2 leading-6 text-ink/75">{summary}</p>
+                    </td>
+                    <td className="max-w-sm px-4 py-3">
+                      <p className="whitespace-pre-line rounded-md border-l-2 border-primary/40 bg-primary/5 px-3 py-2 leading-6 text-ink/75">{suggestedNextStep}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge tone={checkIn.followUpRecommended ? "warn" : "good"}>{checkIn.followUpRecommended ? "Recommended" : "No signal"}</Badge>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

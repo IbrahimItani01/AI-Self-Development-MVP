@@ -47,6 +47,12 @@ const checkInPrompts: Record<keyof CheckInAnswers, string> = {
   insight: "What did you learn about yourself?",
   nextStep: "What is one small step for next week?",
 };
+const MAX_STUDENT_CHAT_MESSAGE_CHARS = 900;
+const STUDENT_CHAT_MESSAGE_TOO_LONG = `Please keep one message under ${MAX_STUDENT_CHAT_MESSAGE_CHARS} characters so I can respond clearly. Send the most important part first, then add more in a second message if needed.`;
+
+function messageLength(value: string): number {
+  return Array.from(value).length;
+}
 
 export async function handleTelegramUpdate(update: TelegramUpdate) {
   if (update.my_chat_member?.chat.type === "private") {
@@ -468,9 +474,11 @@ async function continueCheckIn(student: Student, chatId: string, answer: string)
     chatId,
     text: `Check-in saved.
 
-Summary: ${summary}
+Summary
+${summary}
 
-Suggested next step: ${suggestedNextStep}`,
+Suggested next step
+${suggestedNextStep}`,
   });
 }
 
@@ -494,6 +502,11 @@ Reflection: ${plan.reflectionPrompt}`,
 }
 
 async function handleStudentChat(student: Student, chatId: string, text: string) {
+  if (messageLength(text) > MAX_STUDENT_CHAT_MESSAGE_CHARS) {
+    await sendTelegramMessage({ chatId, text: STUDENT_CHAT_MESSAGE_TOO_LONG });
+    return;
+  }
+
   const conversation = await getOrCreateConversation(student, chatId);
   await addMessage({
     conversationId: conversation.id,
@@ -503,33 +516,39 @@ async function handleStudentChat(student: Student, chatId: string, text: string)
     content: text,
   });
   const recentMessages = await listRecentMessages(conversation.id, 8);
-  const reply = await generateChatReply(student, conversation.runningSummary, recentMessages, text);
+  const chatReply = await generateChatReply(student, conversation.runningSummary, recentMessages, text);
   await addMessage({
     conversationId: conversation.id,
     studentId: student.id,
     organizationId: student.organizationId,
     role: "assistant",
-    content: reply,
+    content: chatReply.reply,
   });
 
   const updatedRecent = await listRecentMessages(conversation.id, 10);
-  const [summary, classification] = await Promise.all([
+  const [summary, fallbackClassification] = await Promise.all([
     summarizeConversation(student, updatedRecent),
-    classifyFollowUpNeed(student, `${text}\n${reply}`),
+    chatReply.humanFollowUpRequest
+      ? Promise.resolve(null)
+      : classifyFollowUpNeed(student, `${text}\n${chatReply.reply}`),
   ]);
   await updateConversationSummary(conversation.id, summary);
-  if (classification.followUpRecommended) {
+  const followUpRequest =
+    chatReply.humanFollowUpRequest ??
+    (fallbackClassification?.followUpRecommended ? fallbackClassification : null);
+
+  if (followUpRequest) {
     await createFollowUpFlag({
       organizationId: student.organizationId,
       studentId: student.id,
       source: "chat",
-      severity: classification.severity,
-      title: classification.title,
-      summary: classification.summary,
-      recommendedAction: classification.recommendedAction,
+      severity: followUpRequest.severity,
+      title: followUpRequest.title,
+      summary: followUpRequest.summary,
+      recommendedAction: followUpRequest.recommendedAction,
     });
     await updateStudentProfile(student.id, { status: "flagged" });
   }
   await touchStudent(student.id);
-  await sendTelegramMessage({ chatId, text: reply });
+  await sendTelegramMessage({ chatId, text: chatReply.reply });
 }

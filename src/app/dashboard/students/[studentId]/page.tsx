@@ -7,6 +7,7 @@ import { getStudentDetail } from "@/lib/db/students";
 import { listStudentCheckIns } from "@/lib/db/checkIns";
 import { listStudentFollowUps } from "@/lib/db/followUps";
 import { formatRelative, formatShortDate } from "@/lib/utils/dates";
+import { cleanAIGeneratedText } from "@/lib/utils/text";
 import { deleteStudentFromDashboard } from "../actions";
 
 export default async function StudentDetailPage({ params }: { params: Promise<{ studentId: string }> }) {
@@ -71,8 +72,10 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
             {checkIns.length ? checkIns.map((checkIn) => (
               <div key={checkIn.id} className="rounded-md border border-ink/10 p-4">
                 <p className="text-xs text-ink/50">{formatShortDate(checkIn.createdAt)}</p>
-                <p className="mt-2 text-sm text-ink/70">{checkIn.aiSummary}</p>
-                <p className="mt-2 text-sm font-medium text-primary">{checkIn.suggestedNextStep}</p>
+                <p className="mt-2 whitespace-pre-line text-sm leading-6 text-ink/70">{cleanAIGeneratedText(checkIn.aiSummary)}</p>
+                <p className="mt-3 rounded-md border-l-2 border-primary/40 bg-primary/5 px-3 py-2 text-sm font-medium leading-6 text-primaryDark">
+                  {cleanAIGeneratedText(checkIn.suggestedNextStep)}
+                </p>
               </div>
             )) : <p className="text-sm text-ink/60">No check-ins yet.</p>}
           </div>

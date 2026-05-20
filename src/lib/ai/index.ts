@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { z } from "zod";
 import { createUsageLog } from "@/lib/db/usage";
+import { cleanAIGeneratedText } from "@/lib/utils/text";
 import type {
 	CheckInAnswers,
 	GrowthPlan,
@@ -25,6 +26,11 @@ const growthPlanSchema = z.object({
 	suggestedNextStep: z.string(),
 });
 
+const checkInSummarySchema = z.object({
+	summary: z.string(),
+	suggestedNextStep: z.string(),
+});
+
 const followUpSchema = z.object({
 	followUpRecommended: z.boolean(),
 	severity: z.enum(["low", "medium", "high"]),
@@ -35,8 +41,53 @@ const followUpSchema = z.object({
 
 type FollowUpClassification = z.infer<typeof followUpSchema>;
 
+const humanFollowUpToolSchema = followUpSchema.omit({ followUpRecommended: true });
+
+export type HumanFollowUpToolRequest = z.infer<typeof humanFollowUpToolSchema>;
+
+export interface ChatReplyResult {
+	reply: string;
+	humanFollowUpRequest: HumanFollowUpToolRequest | null;
+}
+
+const humanFollowUpTool: OpenAI.Chat.Completions.ChatCompletionTool = {
+	type: "function",
+	function: {
+		name: "flag_human_follow_up",
+		description:
+			"Create a school dashboard follow-up flag when the student asks for human help or shares a concern that may benefit from mentor/counselor follow-up.",
+		parameters: {
+			type: "object",
+			additionalProperties: false,
+			properties: {
+				severity: {
+					type: "string",
+					enum: ["low", "medium", "high"],
+					description:
+						"Use high only for urgent school follow-up signals. Keep this non-diagnostic.",
+				},
+				title: {
+					type: "string",
+					description: "Short school-facing title for the follow-up flag.",
+				},
+				summary: {
+					type: "string",
+					description:
+						"Cautious school-facing summary. Do not include detailed dangerous content.",
+				},
+				recommendedAction: {
+					type: "string",
+					description:
+						"Practical human follow-up action for a mentor, counselor, or school admin.",
+				},
+			},
+			required: ["severity", "title", "summary", "recommendedAction"],
+		},
+	},
+};
+
 const outputTokenCaps: Record<UsageType, number> = {
-	chat: 140,
+	chat: 220,
 	summary: 180,
 	check_in: 190,
 	classification: 180,
@@ -68,7 +119,13 @@ async function callAI(input: {
 	system: string;
 	prompt: string;
 	responseFormat?: "json";
-}): Promise<{ text: string; inputTokens: number; outputTokens: number }> {
+	tools?: OpenAI.Chat.Completions.ChatCompletionTool[];
+}): Promise<{
+	text: string;
+	inputTokens: number;
+	outputTokens: number;
+	toolCalls: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[];
+}> {
 	const openai = client();
 	if (!openai) {
 		const fallback = fallbackResponse(input.type, input.prompt);
@@ -81,7 +138,7 @@ async function callAI(input: {
 			outputTokens: Math.ceil(fallback.length / 4),
 			estimatedCost: 0,
 		});
-		return { text: fallback, inputTokens: 0, outputTokens: 0 };
+		return { text: fallback, inputTokens: 0, outputTokens: 0, toolCalls: [] };
 	}
 
 	const completion = await openai.chat.completions.create({
@@ -94,9 +151,13 @@ async function callAI(input: {
 		max_tokens: outputTokenCaps[input.type],
 		response_format:
 			input.responseFormat === "json" ? { type: "json_object" } : undefined,
+		tools: input.tools,
+		tool_choice: input.tools ? "auto" : undefined,
 	});
 
-	const text = completion.choices[0]?.message.content?.trim() || "";
+	const message = completion.choices[0]?.message;
+	const text = message?.content?.trim() || "";
+	const toolCalls = message?.tool_calls ?? [];
 	const inputTokens =
 		completion.usage?.prompt_tokens ?? Math.ceil(input.prompt.length / 4);
 	const outputTokens =
@@ -110,7 +171,7 @@ async function callAI(input: {
 		outputTokens,
 		estimatedCost: estimateUsageCost(inputTokens, outputTokens, model),
 	});
-	return { text, inputTokens, outputTokens };
+	return { text, inputTokens, outputTokens, toolCalls };
 }
 
 function fallbackResponse(type: UsageType, prompt: string): string {
@@ -140,7 +201,12 @@ function fallbackResponse(type: UsageType, prompt: string): string {
 		});
 	}
 	if (type === "check_in") {
-		return "You made progress by noticing what helped and what felt difficult. Your next step is to choose one small action for the coming week and keep it realistic.";
+		return JSON.stringify({
+			summary:
+				"You made progress by noticing what helped and what felt difficult.",
+			suggestedNextStep:
+				"Choose one small realistic action for the coming week.",
+		});
 	}
 	if (type === "summary") {
 		return `Recent reflection summary: ${prompt.slice(0, 500)}`;
@@ -155,6 +221,23 @@ function parseJson<T>(text: string, schema: z.ZodSchema<T>, fallback: T): T {
 		console.error("AI JSON parse failed", error, text);
 		return fallback;
 	}
+}
+
+function parseHumanFollowUpToolRequest(
+	toolCalls: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[],
+): HumanFollowUpToolRequest | null {
+	for (const toolCall of toolCalls) {
+		if (toolCall.type !== "function" || toolCall.function.name !== "flag_human_follow_up") {
+			continue;
+		}
+		try {
+			return humanFollowUpToolSchema.parse(JSON.parse(toolCall.function.arguments));
+		} catch (error) {
+			console.error("AI follow-up tool call parse failed", error);
+			return null;
+		}
+	}
+	return null;
 }
 
 export async function generateGrowthPlan(
@@ -192,7 +275,7 @@ export async function generateChatReply(
 	conversationSummary: string | null | undefined,
 	recentMessages: Message[],
 	userMessage: string,
-): Promise<string> {
+): Promise<ChatReplyResult> {
 	const recent = recentMessages
 		.map((message) => `${message.role}: ${message.content}`)
 		.join("\n");
@@ -207,15 +290,26 @@ ${recent}
 Student message:
 ${userMessage}
 
-Reply as a student development companion. Keep it concise and ask one useful question or suggest one small next step.`;
+Reply as a student development companion. Keep it concise and ask one useful question or suggest one small next step.
+
+If the student explicitly asks for a human to step in, asks to talk to a counselor/mentor/admin/teacher, says they cannot handle the situation alone, or shares a concern that may benefit from human follow-up, call flag_human_follow_up. Use cautious, school-appropriate, non-diagnostic wording. Still write a brief supportive reply for the student when possible.`;
 	const result = await callAI({
 		organizationId: student.organizationId,
 		studentId: student.id,
 		type: "chat",
 		system: `${AI_SYSTEM_INSTRUCTION}\n${studentToneInstruction(student)}`,
 		prompt,
+		tools: [humanFollowUpTool],
 	});
-	return result.text || fallbackResponse("chat", prompt);
+	const humanFollowUpRequest = parseHumanFollowUpToolRequest(result.toolCalls);
+	return {
+		reply:
+			result.text ||
+			(humanFollowUpRequest
+				? "Thanks for telling me. I will flag this for a trusted school adult to follow up. If this feels urgent right now, please speak with a trusted adult near you."
+				: fallbackResponse("chat", prompt)),
+		humanFollowUpRequest,
+	};
 }
 
 export async function summarizeConversation(
@@ -247,20 +341,31 @@ export async function generateCheckInSummary(
 Student: ${student.displayName}
 Grade: ${student.gradeLevel ?? "Not provided"}
 Answers: ${JSON.stringify(checkInAnswers)}
-Return two short paragraphs: Summary and Suggested next step. Keep the total under 600 characters.`;
+Return strict JSON with:
+{
+  "summary": string,
+  "suggestedNextStep": string
+}
+Do not use markdown, asterisks, headings, labels, bullets, or quotation marks around the values.
+Keep summary under 420 characters and suggestedNextStep under 260 characters.
+Use school-appropriate, polished prose.`;
 	const result = await callAI({
 		organizationId: student.organizationId,
 		studentId: student.id,
 		type: "check_in",
 		system: `${AI_SYSTEM_INSTRUCTION}\n${studentToneInstruction(student)}`,
 		prompt,
+		responseFormat: "json",
 	});
-	const [summaryPart, nextPart] = result.text.split(
-		/Suggested next step:|Next step:/i,
+	const parsed = parseJson(
+		result.text,
+		checkInSummarySchema,
+		checkInSummarySchema.parse(JSON.parse(fallbackResponse("check_in", prompt))),
 	);
 	return {
-		summary: summaryPart?.replace(/^Summary:/i, "").trim() || result.text,
-		suggestedNextStep: nextPart?.trim() || checkInAnswers.nextStep,
+		summary: cleanAIGeneratedText(parsed.summary) || checkInAnswers.progress,
+		suggestedNextStep:
+			cleanAIGeneratedText(parsed.suggestedNextStep) || checkInAnswers.nextStep,
 	};
 }
 

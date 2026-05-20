@@ -88,10 +88,11 @@ Every agent must read this file before making changes. Update this file whenever
 - Telegram `/start`, `/help`, `/checkin`, `/plan`, `/reset`
 - Telegram `/delete` student account deletion confirmation flow
 - Telegram invite code onboarding
+- Telegram normal chat message character limit before AI calls
 - AI-generated growth plan
-- AI chat reply and conversation summary
+- AI chat reply with function-tool human follow-up flagging and conversation summary
 - Shared AI response policy with grade-aware tone and output token caps
-- Weekly check-in flow with summary and suggested next step
+- Weekly check-in flow with plain-text AI summary and suggested next step
 - Automated cadence-based check-in reminders and missed-check-in low-engagement follow-up flags via `/api/cron/check-ins`
 - Follow-up classification and flag creation
 - Follow-up status updates from dashboard
@@ -325,16 +326,19 @@ Security model:
   - Save growth plan and mark onboarding complete
 - Chat flow:
   - Subscription access is checked before AI calls.
+  - Normal chat messages over the configured code-level character limit are rejected before storage or AI usage.
   - Student message is saved.
   - Recent messages and running summary are sent to AI.
+  - The chat AI can request the `flag_human_follow_up` tool when the student asks for human help or shares a concern that may benefit from mentor/counselor follow-up.
+  - A successful tool request creates a `followUpFlags` dashboard record with cautious school-facing wording and marks the student as flagged.
   - Assistant reply is saved and sent back.
-  - Conversation summary and follow-up classification run.
+  - Conversation summary runs after the reply, and the separate follow-up classifier remains a fallback when the chat AI did not request the tool.
 - Check-in flow:
   - Progress
   - Difficulty
   - Insight
   - Next step
-  - AI summary and suggested next step
+  - AI summary and suggested next step are generated as strict JSON and saved/rendered as clean plain text, without markdown labels or asterisks.
   - Optional follow-up flag
 - Scheduled check-in automation:
   - Vercel Cron calls `GET /api/cron/check-ins` daily with `Authorization: Bearer CRON_SECRET`.
@@ -414,6 +418,7 @@ Security model:
   - `generateCheckInSummary`
   - `classifyFollowUpNeed`
   - `estimateUsageCost`
+- `generateChatReply` may return a `flag_human_follow_up` tool request. The Telegram handler is responsible for executing that request by creating the existing `followUpFlags` document; the AI service does not write dashboard data directly.
 - The AI should:
   - Be supportive, practical, concise, and school-appropriate.
   - Ask one focused question at a time.
