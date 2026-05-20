@@ -74,7 +74,7 @@ export function CheckInsPage() {
       {visibleCheckIns.length === 0 ? (
         <EmptyState title={checkIns.length === 0 ? "No check-ins yet" : "No matching check-ins"} description={checkIns.length === 0 ? "Students can complete a weekly check-in from Telegram with /checkin." : "Adjust the search or filters to broaden the list."} />
       ) : (
-        <div className="overflow-hidden rounded-lg border border-ink/10 bg-surface shadow-soft">
+        <div className="overflow-x-auto rounded-lg border border-ink/10 bg-surface shadow-soft">
           <table className="w-full min-w-[900px] text-left text-sm">
             <thead className="bg-canvas text-xs uppercase text-ink/50">
               <tr>

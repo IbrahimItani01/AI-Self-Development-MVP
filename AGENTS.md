@@ -73,6 +73,7 @@ Every agent must read this file before making changes. Update this file whenever
 - Server session cookie creation at `/api/auth/session`
 - Session logout at `/api/auth/logout`
 - Protected dashboard routes under `/dashboard`
+- Responsive dashboard shell with a desktop sidebar, mobile top bar, slide-out mobile navigation drawer, and horizontally scrollable data tables on small screens
 - Redux Toolkit dashboard state store with persistent client-side Firebase Firestore listeners for real-time organization, student, invite, check-in, follow-up, usage, plan, growth-plan, and conversation updates
 - Dashboard login handoff shows a live-data loading animation while the Redux store opens Firestore subscriptions
 - Dashboard list pages for students, invite codes, check-ins, and follow-up flags include client-side search, filtering, sorting, empty states, and live counts

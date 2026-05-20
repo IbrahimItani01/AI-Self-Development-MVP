@@ -91,7 +91,7 @@ export function StudentsPage() {
       {visibleStudents.length === 0 ? (
         <EmptyState title={students.length === 0 ? "No students yet" : "No matching students"} description={students.length === 0 ? "Create an invite code and ask students to start the Telegram bot." : "Adjust the search or filters to broaden the list."} />
       ) : (
-        <div className="overflow-hidden rounded-lg border border-ink/10 bg-surface shadow-soft">
+        <div className="overflow-x-auto rounded-lg border border-ink/10 bg-surface shadow-soft">
           <table className="w-full min-w-[900px] text-left text-sm">
             <thead className="bg-canvas text-xs uppercase text-ink/50">
               <tr>

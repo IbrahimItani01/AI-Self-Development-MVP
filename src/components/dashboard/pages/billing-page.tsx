@@ -26,7 +26,7 @@ export function BillingPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <SectionTitle title="Billing" description="Plan access, subscription health, and usage limits for this school." />
         <Badge tone={statusTone(organization.status)}>{organization.status}</Badge>
       </div>

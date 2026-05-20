@@ -140,7 +140,7 @@ export function StudentDetailPage({ studentId }: { studentId: string }) {
             {recentMessages.length ? recentMessages.map((message) => (
               <div key={message.id} className="rounded-md bg-canvas p-3 text-sm">
                 <p className="font-semibold capitalize">{message.role}</p>
-                <p className="mt-1 text-ink/70">{message.content}</p>
+                <p className="mt-1 break-words text-ink/70">{message.content}</p>
               </div>
             )) : <p className="text-sm text-ink/60">No recent messages loaded yet.</p>}
           </div>
@@ -170,7 +170,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-4">
       <dt className="text-ink/50">{label}</dt>
-      <dd className="text-right font-medium text-ink">{value}</dd>
+      <dd className="break-words text-right font-medium text-ink">{value}</dd>
     </div>
   );
 }

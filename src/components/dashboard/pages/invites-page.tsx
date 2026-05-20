@@ -90,7 +90,7 @@ export function InvitesPage() {
       {visibleInvites.length === 0 ? (
         <EmptyState title={invites.length === 0 ? "No invite codes" : "No matching invite codes"} description={invites.length === 0 ? "Generate one invite code for students to join your school bot flow." : "Adjust the search or filters to broaden the list."} />
       ) : (
-        <div className="overflow-hidden rounded-lg border border-ink/10 bg-surface shadow-soft">
+        <div className="overflow-x-auto rounded-lg border border-ink/10 bg-surface shadow-soft">
           <table className="w-full min-w-[760px] text-left text-sm">
             <thead className="bg-canvas text-xs uppercase text-ink/50">
               <tr>

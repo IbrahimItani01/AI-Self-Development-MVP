@@ -10,7 +10,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <DashboardProvider admin={admin} organization={organization}>
       <div className="min-h-screen bg-canvas lg:flex">
         <DashboardNav organizationName={organization.name} />
-        <main className="w-full px-5 py-6 lg:px-8">{children}</main>
+        <main className="min-w-0 w-full px-4 pb-6 pt-24 sm:px-5 lg:px-8 lg:py-6">{children}</main>
       </div>
     </DashboardProvider>
   );
