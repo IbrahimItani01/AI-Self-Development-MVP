@@ -11,6 +11,7 @@ export type FollowUpStatus = "open" | "reviewed" | "closed";
 export type FollowUpSource = "chat" | "check_in" | "low_engagement";
 export type UsageType = "chat" | "summary" | "check_in" | "classification" | "growth_plan";
 export type SubscriptionPlanId = "pro";
+export type CheckInCadence = "weekly" | "twice_weekly" | "every_two_weeks" | "monthly";
 
 export interface BaseDocument {
   id: string;
@@ -84,6 +85,13 @@ export interface Student extends BaseDocument {
   onboardingStatus: OnboardingStatus;
   selectedFocusArea?: string | null;
   mainGoal?: string | null;
+  checkInCadence?: CheckInCadence | null;
+  lastCheckInAt?: Date | null;
+  lastCheckInWeekStart?: Date | null;
+  lastCheckInReminderAt?: Date | null;
+  lastCheckInReminderDueAt?: Date | null;
+  lastMissedCheckInFlagAt?: Date | null;
+  lastMissedCheckInFlagDueAt?: Date | null;
   status: StudentStatus;
   lastInteractionAt?: Date | null;
 }

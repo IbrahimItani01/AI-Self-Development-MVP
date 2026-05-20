@@ -89,6 +89,13 @@ export async function createOrLinkStudent(input: {
     onboardingStatus: "in_progress",
     selectedFocusArea: null,
     mainGoal: null,
+    checkInCadence: null,
+    lastCheckInAt: null,
+    lastCheckInWeekStart: null,
+    lastCheckInReminderAt: null,
+    lastCheckInReminderDueAt: null,
+    lastMissedCheckInFlagAt: null,
+    lastMissedCheckInFlagDueAt: null,
     status: "active",
     lastInteractionAt: serverTimestamp(),
     createdAt: serverTimestamp(),
@@ -110,7 +117,7 @@ export async function createOrLinkStudent(input: {
 
 export async function updateStudentProfile(
   studentId: string,
-  input: Partial<Pick<Student, "displayName" | "gradeLevel" | "cohort" | "selectedFocusArea" | "mainGoal" | "status">> & {
+  input: Partial<Pick<Student, "displayName" | "gradeLevel" | "cohort" | "selectedFocusArea" | "mainGoal" | "checkInCadence" | "status">> & {
     onboardingStatus?: OnboardingStatus;
   },
 ) {
@@ -118,6 +125,22 @@ export async function updateStudentProfile(
     .collection("students")
     .doc(studentId)
     .set({ ...cleanUndefined(input), updatedAt: serverTimestamp(), lastInteractionAt: serverTimestamp() }, { merge: true });
+}
+
+export async function updateStudentCheckInAutomationFields(
+  studentId: string,
+  input: {
+    lastCheckInReminderAt?: Date | null;
+    lastCheckInReminderDueAt?: Date | null;
+    lastMissedCheckInFlagAt?: Date | null;
+    lastMissedCheckInFlagDueAt?: Date | null;
+    status?: Student["status"];
+  },
+) {
+  await adminDb()
+    .collection("students")
+    .doc(studentId)
+    .set({ ...cleanUndefined(input), updatedAt: serverTimestamp() }, { merge: true });
 }
 
 export async function touchStudent(studentId: string) {
@@ -244,6 +267,11 @@ export async function listStudents(organizationId: string): Promise<Student[]> {
     .orderBy("createdAt", "desc")
     .get();
   return snap.docs.map((doc) => fromDoc<Student>(doc));
+}
+
+export async function listStudentsForCheckInAutomation(): Promise<Student[]> {
+  const snap = await adminDb().collection("students").where("status", "in", ["active", "flagged"]).get();
+  return snap.docs.map((doc) => fromDoc<Student>(doc)).filter((student) => student.onboardingStatus === "completed");
 }
 
 export async function getStudentDetail(organizationId: string, studentId: string): Promise<StudentDetail | null> {

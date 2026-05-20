@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "seed:demo": "tsx scripts/seed-demo.ts",
     "telegram:set-webhook": "tsx scripts/set-telegram-webhook.ts",
-    "telegram:send-checkins": "tsx scripts/send-weekly-checkin-reminders.ts"
+    "telegram:send-checkins": "tsx scripts/send-weekly-checkin-reminders.ts",
+    "checkins:run-automation": "tsx scripts/send-weekly-checkin-reminders.ts"
   },
   "dependencies": {
     "@stripe/stripe-js": "^4.10.0",

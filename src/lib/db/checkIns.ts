@@ -17,6 +17,18 @@ export async function createCheckIn(input: {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+  await adminDb()
+    .collection("students")
+    .doc(input.studentId)
+    .set(
+      {
+        lastCheckInAt: serverTimestamp(),
+        lastCheckInWeekStart: toFirestoreDate(input.weekStart),
+        lastInteractionAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true },
+    );
 }
 
 export async function listRecentCheckIns(organizationId: string, limit = 50): Promise<CheckIn[]> {
@@ -38,4 +50,15 @@ export async function listStudentCheckIns(organizationId: string, studentId: str
     .limit(limit)
     .get();
   return snap.docs.map((doc) => fromDoc<CheckIn>(doc));
+}
+
+export async function getLatestStudentCheckIn(organizationId: string, studentId: string): Promise<CheckIn | null> {
+  const snap = await adminDb()
+    .collection("checkIns")
+    .where("organizationId", "==", organizationId)
+    .where("studentId", "==", studentId)
+    .orderBy("createdAt", "desc")
+    .limit(1)
+    .get();
+  return snap.empty ? null : fromDoc<CheckIn>(snap.docs[0]!);
 }

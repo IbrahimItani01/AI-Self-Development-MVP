@@ -91,6 +91,7 @@ Every agent must read this file before making changes. Update this file whenever
 - AI chat reply and conversation summary
 - Shared AI response policy with grade-aware tone and output token caps
 - Weekly check-in flow with summary and suggested next step
+- Automated cadence-based check-in reminders and missed-check-in low-engagement follow-up flags via `/api/cron/check-ins`
 - Follow-up classification and flag creation
 - Follow-up status updates from dashboard
 - Stripe Checkout session creation
@@ -101,7 +102,8 @@ Every agent must read this file before making changes. Update this file whenever
 - Firestore rules and index definitions
 - Demo seed script
 - Telegram webhook setup script
-- Manual weekly check-in reminder script
+- Check-in automation script alias for manual runs
+- Vercel Cron configuration for daily check-in automation
 - README setup and operations documentation
 
 ## Planned V1 Features
@@ -115,7 +117,6 @@ These are either implemented with simple V1 behavior or structured for future ha
 - Usage-based monthly limits
 - Better dashboard loading/error states for client-side interactions
 - More complete billing portal behavior
-- Hosted scheduled reminders instead of manual script
 - More robust follow-up deduplication
 - Formal tests for service modules and API routes
 - Deployment-specific instructions for Vercel and Firebase Hosting
@@ -165,6 +166,8 @@ These are either implemented with simple V1 behavior or structured for future ha
   - Bot sending/parsing and Telegram flow handlers.
 - `src/lib/ai`
   - AI prompts and AI service functions.
+- `src/lib/check-ins`
+  - Scheduled check-in automation and cadence-based missed-check-in logic.
 - `src/lib/stripe`
   - Stripe client and webhook processing.
 - `src/lib/utils`
@@ -222,6 +225,7 @@ Server-only env vars:
 - `FIREBASE_PRIVATE_KEY`
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_WEBHOOK_SECRET`
+- `CRON_SECRET`
 - `OPENAI_API_KEY`
 - `AI_MODEL`
 - `STRIPE_SECRET_KEY`
@@ -248,7 +252,7 @@ Collections:
 - `inviteCodes`
   - Globally unique organization-prefixed invite codes for Telegram student onboarding. Dashboard-created codes are generated server-side from the organization name plus a random suffix and must not overwrite an existing code.
 - `students`
-  - Telegram-linked student records scoped to an organization, including Telegram profile photo file IDs when available.
+  - Telegram-linked student records scoped to an organization, including Telegram profile photo file IDs, selected check-in cadence, last check-in timestamp, reminder timestamp, and missed-check-in flag timestamp when available.
 - `studentOnboarding`
   - Onboarding answers and completion timestamp.
 - `conversations`
@@ -314,6 +318,12 @@ Security model:
   - Next step
   - AI summary and suggested next step
   - Optional follow-up flag
+- Scheduled check-in automation:
+  - Vercel Cron calls `GET /api/cron/check-ins` daily with `Authorization: Bearer CRON_SECRET`.
+  - The job skips inactive/canceled/past-due organizations.
+  - Cadence is read from `students.checkInCadence`, with onboarding-answer and weekly fallbacks.
+  - Due students receive a Telegram reminder to send `/checkin`.
+  - Students still missing the check-in after a 2-day grace period get one `low_engagement` follow-up flag for that due window.
 - Account deletion flow:
   - `/delete` asks for explicit Telegram button confirmation.
   - Confirmation deletes the student record and associated onboarding, growth plan, messages, conversations, check-ins, follow-up flags, usage logs, and bot session.
@@ -410,6 +420,7 @@ Manual checks:
 - Onboarding completes and saves growth plan.
 - Normal Telegram message saves conversation and returns AI/fallback reply.
 - `/checkin` completes four-step flow and saves check-in.
+- `npm run checkins:run-automation` sends due reminders and creates missed-check-in follow-up flags for overdue seeded/adjusted data.
 - Follow-up flags appear and can be reviewed/closed.
 - Stripe Checkout endpoint returns a session URL when Stripe env vars are configured.
 - Stripe webhook updates organization subscription fields.
@@ -417,7 +428,6 @@ Manual checks:
 ## Known Limitations / TODOs
 
 - No super-admin dashboard in V1.
-- Weekly reminders are a manual script, not a hosted scheduled function.
 - Monthly AI usage limits are logged but not enforced.
 - Follow-up flag deduplication is basic; repeated sensitive messages may create multiple flags.
 - Formal automated tests are not yet implemented.

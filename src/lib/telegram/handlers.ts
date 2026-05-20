@@ -29,7 +29,7 @@ import {
   summarizeConversation,
 } from "@/lib/ai";
 import { currentWeekStart } from "@/lib/utils/dates";
-import type { CheckInAnswers, Student, TelegramUpdate, TelegramUser } from "@/types";
+import type { CheckInAnswers, CheckInCadence, Student, TelegramUpdate, TelegramUser } from "@/types";
 import { answerCallbackQuery, getTelegramProfilePhotoFileId, sendTelegramMessage } from "./bot";
 import {
   checkInCadenceOptions,
@@ -305,6 +305,7 @@ async function continueOnboarding(student: Student, chatId: string, answer: stri
   if (step === "gradeLevel") await updateStudentProfile(student.id, { gradeLevel: answer });
   if (step === "focusArea") await updateStudentProfile(student.id, { selectedFocusArea: answer });
   if (step === "mainChallenge") await updateStudentProfile(student.id, { mainGoal: answer });
+  if (step === "checkInCadence") await updateStudentProfile(student.id, { checkInCadence: answer as CheckInCadence });
 
   await upsertOnboarding({ studentId: student.id, organizationId: student.organizationId, answers: data });
 

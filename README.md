@@ -18,6 +18,7 @@ Developers and coding agents should read `AGENTS.md` before working on this proj
 - Telegram Bot API webhook at `/api/telegram/webhook`
 - Generated invite code onboarding flow with Lebanon-focused grade buttons, fixed check-in cadence buttons, and growth plan generation
 - AI chat, conversation summaries, check-in summaries, and cautious follow-up classification
+- Automated check-in reminders and missed-check-in follow-up flags based on each student's selected cadence
 - Admin and Telegram student account deletion flows with associated data cleanup, including `/delete` and Telegram stop/block events when available
 - Stripe Checkout, Billing Portal, and webhook subscription tracking
 - Firestore-backed subscription plan features, student limits, and monthly AI token limits
@@ -56,6 +57,7 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY----
 
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_WEBHOOK_SECRET=
+CRON_SECRET=
 
 OPENAI_API_KEY=
 AI_MODEL=gpt-4o-mini
@@ -153,12 +155,30 @@ Open:
 npm run seed:demo
 npm run telegram:set-webhook
 npm run telegram:send-checkins
+npm run checkins:run-automation
 npm run typecheck
 npm run lint
 npm run build
 ```
 
-`telegram:send-checkins` is a V1 reminder placeholder that can be run manually or scheduled later. It sends a weekly `/checkin` reminder to active students in active/trial organizations.
+`checkins:run-automation` evaluates each active student's selected check-in cadence, sends a Telegram reminder when the next check-in is due, and creates a low-engagement follow-up flag when the check-in remains missing after a 2-day grace period. `telegram:send-checkins` is kept as a backward-compatible alias.
+
+## Scheduled check-in automation
+
+The app includes a Vercel Cron job in `vercel.json`:
+
+```text
+0 6 * * * -> /api/cron/check-ins
+```
+
+Vercel schedules this in UTC. Set `CRON_SECRET` in production; the cron endpoint requires `Authorization: Bearer <CRON_SECRET>`.
+
+The daily job:
+
+- skips inactive/canceled/past-due organizations
+- reads each completed student's cadence from `students.checkInCadence`, falling back to onboarding answers and then weekly
+- sends the student a Telegram `/checkin` reminder when due
+- creates one `low_engagement` follow-up flag for that due window after 2 days overdue
 
 ## Firestore security
 
@@ -194,9 +214,10 @@ The code is structured so those can be added later through separate service modu
 7. Send a normal student reflection message and confirm assistant reply plus saved conversation summary.
 8. Send `/checkin` and complete four answers.
 9. Confirm the check-in appears in `/dashboard/check-ins`.
-10. Confirm follow-up flags can be marked reviewed or closed.
-11. Try Checkout from `/dashboard/billing` after Stripe env vars are configured.
-12. Send a Stripe webhook test event and confirm organization subscription fields update.
+10. Run `npm run checkins:run-automation` against seeded or adjusted overdue data and confirm reminders/low-engagement flags are created.
+11. Confirm follow-up flags can be marked reviewed or closed.
+12. Try Checkout from `/dashboard/billing` after Stripe env vars are configured.
+13. Send a Stripe webhook test event and confirm organization subscription fields update.
 
 ## Assumptions and V1 placeholders
 
@@ -205,4 +226,4 @@ The code is structured so those can be added later through separate service modu
 - Raw conversation context is hidden behind a disclosure on the student detail page and should be reviewed responsibly.
 - AI calls use OpenAI when `OPENAI_API_KEY` is set. Without it, deterministic fallback responses are used and usage is logged with zero cost.
 - Monthly AI usage limits are not enforced yet, but usage logging is centralized so limits can be added before AI calls.
-- Weekly reminders are a script, not a hosted scheduled function.
+- Check-in reminders run through Vercel Cron in production. The same automation can be run manually with `npm run checkins:run-automation`.

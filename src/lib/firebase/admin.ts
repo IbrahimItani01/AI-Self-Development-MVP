@@ -45,7 +45,13 @@ export function fromDoc<T extends { id: string }>(doc: FirebaseFirestore.Documen
   const data = doc.data() ?? {};
   const normalized = Object.fromEntries(
     Object.entries(data).map(([key, value]) => {
-      if (key.toLowerCase().endsWith("at") || key === "weekStart" || key === "subscriptionCurrentPeriodEnd" || key === "expiresAt") {
+      if (
+        key.toLowerCase().endsWith("at") ||
+        key.endsWith("WeekStart") ||
+        key === "weekStart" ||
+        key === "subscriptionCurrentPeriodEnd" ||
+        key === "expiresAt"
+      ) {
         return [key, toDate(value)];
       }
       return [key, value];
