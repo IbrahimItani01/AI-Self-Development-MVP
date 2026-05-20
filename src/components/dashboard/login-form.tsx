@@ -59,8 +59,8 @@ export function LoginForm() {
         />
       </label>
       {error ? <p className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
-      <Button className="w-full" disabled={loading}>
-        {loading ? "Signing in..." : "Login to School Dashboard"}
+      <Button className="w-full" disabled={loading} loading={loading} loadingText="Signing in...">
+        Login to School Dashboard
       </Button>
     </form>
   );

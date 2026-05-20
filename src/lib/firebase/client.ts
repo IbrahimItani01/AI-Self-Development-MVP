@@ -2,6 +2,7 @@
 
 import { getApp, getApps, initializeApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -22,4 +23,12 @@ export function getFirebaseAuth(): Auth {
   }
   const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   return getAuth(app);
+}
+
+export function getFirebaseDb(): Firestore {
+  if (!firebaseClientConfigured()) {
+    throw new Error("Firebase client env vars are not configured.");
+  }
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  return getFirestore(app);
 }

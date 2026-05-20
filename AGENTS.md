@@ -73,6 +73,10 @@ Every agent must read this file before making changes. Update this file whenever
 - Server session cookie creation at `/api/auth/session`
 - Session logout at `/api/auth/logout`
 - Protected dashboard routes under `/dashboard`
+- Redux Toolkit dashboard state store with persistent client-side Firebase Firestore listeners for real-time organization, student, invite, check-in, follow-up, usage, plan, growth-plan, and conversation updates
+- Dashboard login handoff shows a live-data loading animation while the Redux store opens Firestore subscriptions
+- Dashboard list pages for students, invite codes, check-ins, and follow-up flags include client-side search, filtering, sorting, empty states, and live counts
+- Shared button primitives support inline loading spinners for async login, registration, billing, invite, follow-up, logout, and destructive confirmation actions
 - Dashboard pages:
   - `/dashboard`
   - `/dashboard/students`
@@ -128,6 +132,8 @@ These are either implemented with simple V1 behavior or structured for future ha
 
 - Next.js App Router
 - React
+- Redux Toolkit
+- React Redux
 - TypeScript
 - Tailwind CSS
 - Firebase Authentication
@@ -154,13 +160,15 @@ These are either implemented with simple V1 behavior or structured for future ha
 - `src/app/dashboard`
   - Protected school dashboard pages.
 - `src/components/dashboard`
-  - Dashboard navigation, login form, billing actions, stat cards.
+  - Dashboard navigation, login form, billing actions, stat cards, real-time dashboard provider, and Redux-backed dashboard page components.
 - `src/components/landing`
   - Public landing page UI.
 - `src/components/ui`
   - Simple shared UI primitives.
 - `src/lib/firebase`
   - Firebase client and Admin SDK setup.
+- `src/lib/redux`
+  - Redux store, dashboard slice, typed hooks, and selectors for client-side live dashboard state.
 - `src/lib/auth`
   - Server-side admin session/org context helpers.
 - `src/lib/db`
@@ -296,6 +304,7 @@ Security model:
 - Students do not access Firestore directly in V1.
 - Bot/API/server scripts use Firebase Admin SDK.
 - Dashboard access is scoped by `organizationAdmins/{firebaseUid}.organizationId`.
+- Dashboard client views subscribe directly to organization-scoped Firestore data with Firebase Auth and security rules; server route/layout checks still gate dashboard access through the session cookie.
 - Public reads are denied.
 
 ## Telegram Bot Flow Summary

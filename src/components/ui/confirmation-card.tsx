@@ -87,8 +87,8 @@ export function ConfirmationCard({
           <SecondaryButton ref={cancelButtonRef} type="button" disabled={pending} onClick={onCancel}>
             {cancelLabel}
           </SecondaryButton>
-          <Button type="button" className="bg-danger hover:bg-danger/90" disabled={pending} onClick={onConfirm}>
-            {pending ? "Working..." : confirmLabel}
+          <Button type="button" className="bg-danger hover:bg-danger/90" disabled={pending} loading={pending} loadingText="Working..." onClick={onConfirm}>
+            {confirmLabel}
           </Button>
         </div>
       </section>

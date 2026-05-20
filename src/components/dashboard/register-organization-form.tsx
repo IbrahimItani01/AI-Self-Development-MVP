@@ -73,8 +73,8 @@ export function RegisterOrganizationForm() {
         <Field name="country" label="Country" />
       </div>
       {error ? <p className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
-      <Button className="w-full" disabled={loading}>
-        {loading ? "Creating account..." : "Continue to plan"}
+      <Button className="w-full" disabled={loading} loading={loading} loadingText="Creating account...">
+        Continue to plan
       </Button>
       <p className="text-center text-sm text-ink/60">
         Already have an account? <Link href="/login" className="font-semibold text-primary">Log in</Link>

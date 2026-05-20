@@ -36,8 +36,8 @@ export function CheckoutButton({
 
   return (
     <div className="space-y-2">
-      <Button className="w-full" disabled={disabled || loading} onClick={openCheckout}>
-        {loading ? "Opening checkout..." : label}
+      <Button className="w-full" disabled={disabled || loading} loading={loading} loadingText="Opening checkout..." onClick={openCheckout}>
+        {label}
       </Button>
       {error ? <p className="text-sm text-danger">{error}</p> : null}
     </div>

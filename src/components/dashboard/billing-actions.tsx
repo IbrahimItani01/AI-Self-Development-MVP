@@ -51,12 +51,12 @@ export function BillingActions({
     <div className="space-y-3">
       <div className="flex flex-wrap gap-3">
         {canStartCheckout ? (
-          <Button disabled={Boolean(loading)} onClick={openCheckout}>
-            {loading === "pro" ? "Opening..." : "Complete Pro payment"}
+          <Button disabled={Boolean(loading)} loading={loading === "pro"} loadingText="Opening..." onClick={openCheckout}>
+            Complete Pro payment
           </Button>
         ) : null}
-        <SecondaryButton disabled={Boolean(loading) || !hasStripeCustomer} onClick={openPortal}>
-          {loading === "portal" ? "Opening..." : "Open Billing Portal"}
+        <SecondaryButton disabled={Boolean(loading) || !hasStripeCustomer} loading={loading === "portal"} loadingText="Opening..." onClick={openPortal}>
+          Open Billing Portal
         </SecondaryButton>
       </div>
       {error ? <p className="text-sm text-danger">{error}</p> : null}

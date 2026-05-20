@@ -12,6 +12,10 @@ Developers and coding agents should read `AGENTS.md` before working on this proj
 
 - Next.js App Router dashboard and public landing page
 - Firebase Authentication dashboard login with session cookies
+- Redux Toolkit dashboard state management with client-side Firestore real-time listeners
+- Live dashboard updates for organization, students, invite codes, check-ins, follow-up flags, usage, subscription plans, growth plans, and conversations
+- Client-side search, filtering, sorting, and live counts on students, invite codes, check-ins, and follow-up pages
+- Inline loading spinners for login, registration, billing, invite, follow-up, logout, and destructive confirmation buttons
 - Organization registration flow with Stripe customer creation and Firestore-backed Pro plan selection
 - Firestore data model for organizations, admins, invite codes, students, conversations, check-ins, growth plans, follow-up flags, usage logs, and Stripe event logs
 - Firebase Admin SDK server-side access
@@ -186,6 +190,14 @@ The daily job:
 - reads each completed student's cadence from `students.checkInCadence`, falling back to onboarding answers and then weekly
 - sends the student a Telegram `/checkin` reminder when due
 - creates one `low_engagement` follow-up flag for that due window after 2 days overdue
+
+## Dashboard state and real-time updates
+
+The protected dashboard layout initializes a persistent Redux Toolkit store and opens Firebase client `onSnapshot` listeners after Firebase Auth is available in the browser. This keeps dashboard navigation fast after the initial live-data load and updates visible tables/cards when organization-scoped Firestore records change.
+
+Subscribed dashboard data includes organizations, admins, students, invite codes, check-ins, follow-up flags, usage logs, subscription plans, growth plans, and conversations. Student detail pages open an additional student-scoped message listener only for the currently viewed student so raw conversation context is not loaded globally.
+
+If dashboard real-time reads fail, check that the Firebase client env vars are present, the browser user is signed in through Firebase Auth, and deployed Firestore rules include the organization-scoped dashboard read permissions in `firestore.rules`.
 
 ## Organization account deletion
 

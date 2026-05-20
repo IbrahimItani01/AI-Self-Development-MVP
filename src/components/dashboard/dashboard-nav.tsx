@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, CreditCard, Flag, Home, LogOut, Settings, Ticket, Users, ClipboardCheck } from "lucide-react";
+import { BarChart3, CreditCard, Flag, Home, Loader2, LogOut, Settings, Ticket, Users, ClipboardCheck } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 const links = [
@@ -18,8 +19,10 @@ const links = [
 export function DashboardNav({ organizationName }: { organizationName: string }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [loggingOut, setLoggingOut] = useState(false);
 
   async function logout() {
+    setLoggingOut(true);
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/login");
   }
@@ -54,9 +57,9 @@ export function DashboardNav({ organizationName }: { organizationName: string })
           );
         })}
       </nav>
-      <button onClick={logout} className="mt-4 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink/60 hover:bg-canvas">
-        <LogOut size={17} />
-        Sign out
+      <button disabled={loggingOut} onClick={logout} className="mt-4 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink/60 hover:bg-canvas disabled:pointer-events-none disabled:opacity-50">
+        {loggingOut ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <LogOut size={17} />}
+        {loggingOut ? "Signing out..." : "Sign out"}
       </button>
     </aside>
   );

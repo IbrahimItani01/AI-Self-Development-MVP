@@ -32,7 +32,9 @@ service cloud.firestore {
     }
 
     match /inviteCodes/{inviteId} {
-      allow read, create, update, delete: if isOrgAdmin(request.resource.data.organizationId) || isOrgAdmin(resource.data.organizationId);
+      allow read: if isOrgAdmin(resource.data.organizationId);
+      allow create: if isOrgAdmin(request.resource.data.organizationId);
+      allow update, delete: if isOrgAdmin(resource.data.organizationId);
     }
 
     match /students/{studentId} {

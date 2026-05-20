@@ -53,9 +53,11 @@ export function DeleteOrganizationForm({
         <SecondaryButton
           type="submit"
           disabled={!confirmed || pending}
+          loading={pending}
+          loadingText="Deleting..."
           className="border-danger/25 text-danger hover:bg-danger/10"
         >
-          {pending ? "Deleting..." : "Delete organization account"}
+          Delete organization account
         </SecondaryButton>
         {state.error ? <p className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">{state.error}</p> : null}
       </form>
