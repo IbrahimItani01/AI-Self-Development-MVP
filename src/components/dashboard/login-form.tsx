@@ -41,7 +41,7 @@ export function LoginForm() {
       <label className="block text-sm font-medium text-ink">
         Email
         <input
-          className="mt-1 w-full rounded-md border border-ink/10 px-3 py-2 outline-none focus:border-wine"
+          className="mt-1 w-full rounded-md border border-ink/10 px-3 py-2 outline-none focus:border-primary"
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
@@ -51,14 +51,14 @@ export function LoginForm() {
       <label className="block text-sm font-medium text-ink">
         Password
         <input
-          className="mt-1 w-full rounded-md border border-ink/10 px-3 py-2 outline-none focus:border-wine"
+          className="mt-1 w-full rounded-md border border-ink/10 px-3 py-2 outline-none focus:border-primary"
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           required
         />
       </label>
-      {error ? <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
+      {error ? <p className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
       <Button className="w-full" disabled={loading}>
         {loading ? "Signing in..." : "Login to School Dashboard"}
       </Button>

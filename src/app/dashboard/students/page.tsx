@@ -29,9 +29,9 @@ export default async function StudentsPage() {
       {students.length === 0 ? (
         <EmptyState title="No students yet" description="Create an invite code and ask students to start the Telegram bot." />
       ) : (
-        <div className="overflow-hidden rounded-lg border border-ink/10 bg-white shadow-soft">
+        <div className="overflow-hidden rounded-lg border border-ink/10 bg-surface shadow-soft">
           <table className="w-full min-w-[900px] text-left text-sm">
-            <thead className="bg-sand text-xs uppercase text-ink/50">
+            <thead className="bg-canvas text-xs uppercase text-ink/50">
               <tr>
                 <th className="px-4 py-3">Photo</th>
                 <th className="px-4 py-3">Name</th>
@@ -59,7 +59,7 @@ export default async function StudentsPage() {
                         className="h-10 w-10 rounded-full border border-ink/10 object-cover"
                       />
                     ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sand text-xs font-semibold text-ink/50">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-canvas text-xs font-semibold text-ink/50">
                         {student.displayName.slice(0, 1).toUpperCase()}
                       </div>
                     )}
@@ -76,7 +76,7 @@ export default async function StudentsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <Link href={`/dashboard/students/${student.id}`} className="font-semibold text-wine">View</Link>
+                      <Link href={`/dashboard/students/${student.id}`} className="font-semibold text-primary">View</Link>
                       <form action={deleteStudentFromDashboard}>
                         <input type="hidden" name="studentId" value={student.id} />
                         <input type="hidden" name="returnTo" value="/dashboard/students" />

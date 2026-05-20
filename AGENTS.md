@@ -187,6 +187,20 @@ These are either implemented with simple V1 behavior or structured for future ha
 - Read this file before changing code.
 - Update this file when adding, removing, or significantly changing features or architecture.
 - Do not make large architectural changes without documenting the reason in this file and, if appropriate, the README.
+- Use the shared Tailwind palette tokens for UI color work instead of one-off page hex values:
+  - `ink` `#1F2320`
+  - `surface` `#FFFFFF`
+  - `canvas` `#F7F4EE`
+  - `muted` `#E8E3DA`
+  - `primary` `#1F6F68`
+  - `primaryDark` `#174F4A`
+  - `sage` `#6F8674`
+  - `wine` `#8B3A62`
+  - `gold` `#B9874C`
+  - `info` `#2A7AB5`
+  - `success` `#2F7D55`
+  - `warning` `#B7791F`
+  - `danger` `#C2413B`
 - Keep TypeScript strict and readable.
 - Keep business logic out of UI components when practical.
 - Keep external service concerns isolated:

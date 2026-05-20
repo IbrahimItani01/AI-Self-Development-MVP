@@ -25,9 +25,9 @@ export function DashboardNav({ organizationName }: { organizationName: string })
   }
 
   return (
-    <aside className="flex min-h-screen w-full flex-col border-r border-ink/10 bg-white px-4 py-5 lg:w-72">
+    <aside className="flex min-h-screen w-full flex-col border-r border-ink/10 bg-surface px-4 py-5 lg:w-72">
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-wine text-white">
+        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-white">
           <BarChart3 size={20} />
         </div>
         <div>
@@ -44,8 +44,8 @@ export function DashboardNav({ organizationName }: { organizationName: string })
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink/70 hover:bg-sand hover:text-ink",
-                active && "bg-wine text-white hover:bg-wine hover:text-white",
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink/70 hover:bg-canvas hover:text-ink",
+                active && "bg-primary text-white hover:bg-primary hover:text-white",
               )}
             >
               <Icon size={17} />
@@ -54,7 +54,7 @@ export function DashboardNav({ organizationName }: { organizationName: string })
           );
         })}
       </nav>
-      <button onClick={logout} className="mt-4 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink/60 hover:bg-sand">
+      <button onClick={logout} className="mt-4 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink/60 hover:bg-canvas">
         <LogOut size={17} />
         Sign out
       </button>

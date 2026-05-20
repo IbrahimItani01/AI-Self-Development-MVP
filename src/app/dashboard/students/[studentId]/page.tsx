@@ -72,7 +72,7 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
               <div key={checkIn.id} className="rounded-md border border-ink/10 p-4">
                 <p className="text-xs text-ink/50">{formatShortDate(checkIn.createdAt)}</p>
                 <p className="mt-2 text-sm text-ink/70">{checkIn.aiSummary}</p>
-                <p className="mt-2 text-sm font-medium text-wine">{checkIn.suggestedNextStep}</p>
+                <p className="mt-2 text-sm font-medium text-primary">{checkIn.suggestedNextStep}</p>
               </div>
             )) : <p className="text-sm text-ink/60">No check-ins yet.</p>}
           </div>
@@ -102,7 +102,7 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
           </p>
           <div className="mt-4 space-y-3">
             {recentMessages.map((message) => (
-              <div key={message.id} className="rounded-md bg-sand p-3 text-sm">
+              <div key={message.id} className="rounded-md bg-canvas p-3 text-sm">
                 <p className="font-semibold capitalize">{message.role}</p>
                 <p className="mt-1 text-ink/70">{message.content}</p>
               </div>
@@ -111,11 +111,11 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
         </details>
       </Card>
 
-      <Card className="border-red-200 bg-red-50/40">
+      <Card className="border-danger/25 bg-danger/5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 className="font-semibold text-red-800">Remove student account</h2>
-            <p className="mt-2 text-sm text-red-700">
+            <h2 className="font-semibold text-danger">Remove student account</h2>
+            <p className="mt-2 text-sm text-danger">
               Deletes this student and their onboarding, plan, messages, check-ins, follow-up flags, bot session, and usage logs for this organization.
             </p>
           </div>

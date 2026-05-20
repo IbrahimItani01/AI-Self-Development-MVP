@@ -59,7 +59,7 @@ export function BillingActions({
           {loading === "portal" ? "Opening..." : "Open Billing Portal"}
         </SecondaryButton>
       </div>
-      {error ? <p className="text-sm text-red-700">{error}</p> : null}
+      {error ? <p className="text-sm text-danger">{error}</p> : null}
     </div>
   );
 }

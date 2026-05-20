@@ -29,7 +29,7 @@ export default async function FollowUpsPage() {
       ) : (
         <div className="grid gap-4">
           {flags.map((flag) => (
-            <div key={flag.id} className="rounded-lg border border-ink/10 bg-white p-5 shadow-soft">
+            <div key={flag.id} className="rounded-lg border border-ink/10 bg-surface p-5 shadow-soft">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -37,7 +37,7 @@ export default async function FollowUpsPage() {
                     <Badge tone={statusTone(flag.severity)}>{flag.severity}</Badge>
                     <Badge tone={statusTone(flag.status)}>{flag.status}</Badge>
                   </div>
-                  <Link href={`/dashboard/students/${flag.studentId}`} className="mt-2 block text-sm font-medium text-wine">
+                  <Link href={`/dashboard/students/${flag.studentId}`} className="mt-2 block text-sm font-medium text-primary">
                     {names.get(flag.studentId) || "Student"}
                   </Link>
                 </div>

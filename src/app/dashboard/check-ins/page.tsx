@@ -18,9 +18,9 @@ export default async function CheckInsPage() {
       {checkIns.length === 0 ? (
         <EmptyState title="No check-ins yet" description="Students can complete a weekly check-in from Telegram with /checkin." />
       ) : (
-        <div className="overflow-hidden rounded-lg border border-ink/10 bg-white shadow-soft">
+        <div className="overflow-hidden rounded-lg border border-ink/10 bg-surface shadow-soft">
           <table className="w-full min-w-[900px] text-left text-sm">
-            <thead className="bg-sand text-xs uppercase text-ink/50">
+            <thead className="bg-canvas text-xs uppercase text-ink/50">
               <tr>
                 <th className="px-4 py-3">Student</th>
                 <th className="px-4 py-3">Date</th>
@@ -33,7 +33,7 @@ export default async function CheckInsPage() {
               {checkIns.map((checkIn) => (
                 <tr key={checkIn.id} className="align-top">
                   <td className="px-4 py-3 font-medium">
-                    <Link className="text-wine" href={`/dashboard/students/${checkIn.studentId}`}>
+                    <Link className="text-primary" href={`/dashboard/students/${checkIn.studentId}`}>
                       {names.get(checkIn.studentId) || "Student"}
                     </Link>
                   </td>

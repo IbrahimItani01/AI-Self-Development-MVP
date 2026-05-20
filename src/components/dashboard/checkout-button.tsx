@@ -39,7 +39,7 @@ export function CheckoutButton({
       <Button className="w-full" disabled={disabled || loading} onClick={openCheckout}>
         {loading ? "Opening checkout..." : label}
       </Button>
-      {error ? <p className="text-sm text-red-700">{error}</p> : null}
+      {error ? <p className="text-sm text-danger">{error}</p> : null}
     </div>
   );
 }

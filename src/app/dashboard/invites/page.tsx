@@ -62,9 +62,9 @@ export default async function InvitesPage() {
       {invites.length === 0 ? (
         <EmptyState title="No invite codes" description="Generate one invite code for students to join your school bot flow." />
       ) : (
-        <div className="overflow-hidden rounded-lg border border-ink/10 bg-white shadow-soft">
+        <div className="overflow-hidden rounded-lg border border-ink/10 bg-surface shadow-soft">
           <table className="w-full min-w-[760px] text-left text-sm">
-            <thead className="bg-sand text-xs uppercase text-ink/50">
+            <thead className="bg-canvas text-xs uppercase text-ink/50">
               <tr>
                 <th className="px-4 py-3">Code</th>
                 <th className="px-4 py-3">Label</th>
@@ -77,7 +77,7 @@ export default async function InvitesPage() {
             <tbody className="divide-y divide-ink/10">
               {invites.map((invite) => (
                 <tr key={invite.id}>
-                  <td className="px-4 py-3 font-semibold text-wine">{invite.code}</td>
+                  <td className="px-4 py-3 font-semibold text-primary">{invite.code}</td>
                   <td className="px-4 py-3">{invite.label}</td>
                   <td className="px-4 py-3">{invite.usedCount} / {invite.maxUses ?? "Unlimited"}</td>
                   <td className="px-4 py-3">{formatShortDate(invite.expiresAt)}</td>

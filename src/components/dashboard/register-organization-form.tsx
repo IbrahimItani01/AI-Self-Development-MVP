@@ -72,12 +72,12 @@ export function RegisterOrganizationForm() {
         <Field name="city" label="City" />
         <Field name="country" label="Country" />
       </div>
-      {error ? <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
+      {error ? <p className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
       <Button className="w-full" disabled={loading}>
         {loading ? "Creating account..." : "Continue to plan"}
       </Button>
       <p className="text-center text-sm text-ink/60">
-        Already have an account? <Link href="/login" className="font-semibold text-wine">Log in</Link>
+        Already have an account? <Link href="/login" className="font-semibold text-primary">Log in</Link>
       </p>
     </form>
   );
@@ -91,7 +91,7 @@ function Field({
     <label className="block text-sm font-medium text-ink">
       {label}
       <input
-        className="mt-1 w-full rounded-md border border-ink/10 px-3 py-2 outline-none focus:border-wine"
+        className="mt-1 w-full rounded-md border border-ink/10 px-3 py-2 outline-none focus:border-primary"
         {...props}
       />
     </label>

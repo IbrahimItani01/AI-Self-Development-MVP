@@ -35,13 +35,13 @@ export default async function DashboardPage() {
       <Card>
         <h2 className="text-lg font-semibold">Demo flow</h2>
         <div className="mt-4 grid gap-3 text-sm text-ink/70 md:grid-cols-3">
-          <Link className="rounded-md border border-ink/10 p-4 hover:bg-sand" href="/dashboard/invites">
+          <Link className="rounded-md border border-ink/10 p-4 hover:bg-canvas" href="/dashboard/invites">
             Create or share invite code
           </Link>
-          <Link className="rounded-md border border-ink/10 p-4 hover:bg-sand" href="/dashboard/check-ins">
+          <Link className="rounded-md border border-ink/10 p-4 hover:bg-canvas" href="/dashboard/check-ins">
             Review check-ins
           </Link>
-          <Link className="rounded-md border border-ink/10 p-4 hover:bg-sand" href="/dashboard/follow-ups">
+          <Link className="rounded-md border border-ink/10 p-4 hover:bg-canvas" href="/dashboard/follow-ups">
             Manage follow-up flags
           </Link>
         </div>

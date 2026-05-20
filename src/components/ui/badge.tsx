@@ -2,9 +2,9 @@ import { cn } from "@/lib/utils/cn";
 
 const toneStyles = {
   neutral: "bg-ink/5 text-ink",
-  good: "bg-sage/15 text-sage",
-  warn: "bg-gold/20 text-amber-800",
-  danger: "bg-red-100 text-red-700",
+  good: "bg-success/15 text-success",
+  warn: "bg-warning/20 text-warning",
+  danger: "bg-danger/10 text-danger",
 };
 
 export function Badge({ children, tone = "neutral" }: { children: React.ReactNode; tone?: keyof typeof toneStyles }) {

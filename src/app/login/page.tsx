@@ -10,9 +10,9 @@ export default async function LoginPage({
   const params = await searchParams;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-sand px-6 py-12">
+    <main className="flex min-h-screen items-center justify-center bg-canvas px-6 py-12">
       <Card className="w-full max-w-md">
-        <Link href="/" className="text-sm font-semibold text-wine">
+        <Link href="/" className="text-sm font-semibold text-primary">
           AI Student Development Companion
         </Link>
         <h1 className="mt-5 text-2xl font-semibold text-ink">School dashboard login</h1>
@@ -20,7 +20,7 @@ export default async function LoginPage({
           Sign in with the Firebase account linked to your school admin profile.
         </p>
         {params?.accountDeleted ? (
-          <p className="mt-4 rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
+          <p className="mt-4 rounded-md bg-success/10 px-3 py-2 text-sm text-success">
             The organization account and related data were deleted.
           </p>
         ) : null}
@@ -28,7 +28,7 @@ export default async function LoginPage({
           <LoginForm />
         </div>
         <p className="mt-5 text-center text-sm text-ink/60">
-          New school? <Link href="/register" className="font-semibold text-wine">Create an organization account</Link>
+          New school? <Link href="/register" className="font-semibold text-primary">Create an organization account</Link>
         </p>
       </Card>
     </main>

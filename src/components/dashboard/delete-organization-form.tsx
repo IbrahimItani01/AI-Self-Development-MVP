@@ -20,7 +20,7 @@ export function DeleteOrganizationForm({
       <label className="block text-sm font-medium text-ink">
         Type the organization name to confirm
         <input
-          className="mt-1 w-full rounded-md border border-red-200 px-3 py-2 outline-none focus:border-red-500"
+          className="mt-1 w-full rounded-md border border-danger/25 px-3 py-2 outline-none focus:border-danger"
           name="confirmation"
           value={confirmation}
           onChange={(event) => setConfirmation(event.target.value)}
@@ -32,7 +32,7 @@ export function DeleteOrganizationForm({
       <SecondaryButton
         type="submit"
         disabled={!confirmed || pending}
-        className="border-red-200 text-red-700 hover:bg-red-50"
+        className="border-danger/25 text-danger hover:bg-danger/10"
         onClick={(event) => {
           if (!confirmed) {
             event.preventDefault();
@@ -46,7 +46,7 @@ export function DeleteOrganizationForm({
       >
         {pending ? "Deleting..." : "Delete organization account"}
       </SecondaryButton>
-      {state.error ? <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{state.error}</p> : null}
+      {state.error ? <p className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">{state.error}</p> : null}
     </form>
   );
 }

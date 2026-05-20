@@ -4,8 +4,8 @@
 
 :root {
   color-scheme: light;
-  background: #f8f4ed;
-  color: #20181f;
+  background: #F7F4EE;
+  color: #1F2320;
 }
 
 * {
@@ -14,8 +14,8 @@
 
 body {
   margin: 0;
-  background: #f8f4ed;
-  color: #20181f;
+  background: #F7F4EE;
+  color: #1F2320;
 }
 
 a {
@@ -25,8 +25,8 @@ a {
 
 .landing-grid-bg {
   background-image:
-    linear-gradient(rgba(23, 23, 20, 0.065) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(23, 23, 20, 0.065) 1px, transparent 1px);
+    linear-gradient(rgba(31, 35, 32, 0.065) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 35, 32, 0.065) 1px, transparent 1px);
   background-size: 42px 42px;
 }
 

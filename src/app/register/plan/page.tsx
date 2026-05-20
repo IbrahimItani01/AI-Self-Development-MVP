@@ -13,7 +13,7 @@ export default async function RegisterPlanPage() {
   const plans = await listActiveSubscriptionPlans();
 
   return (
-    <main className="min-h-screen bg-sand px-6 py-12">
+    <main className="min-h-screen bg-canvas px-6 py-12">
       <div className="mx-auto max-w-5xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -70,7 +70,7 @@ export default async function RegisterPlanPage() {
 
 function Limit({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between rounded-md bg-sand px-4 py-3">
+    <div className="flex items-center justify-between rounded-md bg-canvas px-4 py-3">
       <span className="text-ink/60">{label}</span>
       <span className="font-semibold text-ink">{value}</span>
     </div>

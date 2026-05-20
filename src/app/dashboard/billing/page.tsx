@@ -81,7 +81,7 @@ export default async function BillingPage() {
               </ul>
             </div>
           ) : (
-            <p className="mt-6 text-sm text-red-700">The organization plan is not configured in Firestore.</p>
+            <p className="mt-6 text-sm text-danger">The organization plan is not configured in Firestore.</p>
           )}
         </Card>
       </div>
@@ -91,7 +91,7 @@ export default async function BillingPage() {
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md bg-sand px-4 py-3">
+    <div className="rounded-md bg-canvas px-4 py-3">
       <dt className="text-ink/50">{label}</dt>
       <dd className="mt-1 font-medium">{value}</dd>
     </div>
@@ -106,8 +106,8 @@ function UsageBar({ label, value, limit }: { label: string; value: number; limit
         <span className="font-medium">{label}</span>
         <span className="text-ink/60">{value.toLocaleString()} / {limit ? limit.toLocaleString() : "Not set"}</span>
       </div>
-      <div className="mt-2 h-2 rounded-full bg-sand">
-        <div className="h-2 rounded-full bg-wine" style={{ width: `${percent}%` }} />
+      <div className="mt-2 h-2 rounded-full bg-muted">
+        <div className="h-2 rounded-full bg-primary" style={{ width: `${percent}%` }} />
       </div>
     </div>
   );
