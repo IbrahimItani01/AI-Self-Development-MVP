@@ -1,8 +1,10 @@
+import { DeleteOrganizationForm } from "@/components/dashboard/delete-organization-form";
 import { Card, SectionTitle } from "@/components/ui/card";
 import { Badge, statusTone } from "@/components/ui/badge";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { getSubscriptionPlan } from "@/lib/db/plans";
 import { subscriptionPlanDisplayName } from "@/lib/utils/plans";
+import { deleteOrganizationFromDashboard } from "./actions";
 
 export default async function SettingsPage() {
   const { organization } = await requireAdmin();
@@ -31,6 +33,20 @@ export default async function SettingsPage() {
         <p className="mt-3 text-sm text-ink/60">
           V1 uses the configured AI provider and model from environment variables. Monthly usage limits can be enforced in the usage service before future AI calls.
         </p>
+      </Card>
+      <Card className="border-red-200">
+        <h2 className="font-semibold text-red-800">Delete organization account</h2>
+        <p className="mt-3 text-sm text-ink/60">
+          This permanently removes the organization, admin mapping, invite codes, students, onboarding, growth plans,
+          conversations, messages, check-ins, follow-up flags, bot sessions, and usage logs. A minimal anonymized deletion
+          event is retained for product-owner aggregate insights.
+        </p>
+        {organization.stripeCustomerId ? (
+          <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+            The linked Stripe customer will be deleted after any subscription is canceled.
+          </p>
+        ) : null}
+        <DeleteOrganizationForm organizationName={organization.name} action={deleteOrganizationFromDashboard} />
       </Card>
     </div>
   );

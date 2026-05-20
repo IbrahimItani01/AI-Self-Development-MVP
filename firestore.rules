@@ -79,6 +79,10 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /organizationDeletionEvents/{eventId} {
+      allow read, write: if false;
+    }
+
     match /botSessions/{sessionId} {
       allow read, write: if false;
     }

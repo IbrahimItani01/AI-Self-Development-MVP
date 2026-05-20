@@ -1,4 +1,4 @@
-import { adminDb, cleanUndefined, fromDoc, serverTimestamp, toFirestoreDate } from "@/lib/firebase/admin";
+import { adminAuth, adminDb, cleanUndefined, fromDoc, serverTimestamp, toFirestoreDate } from "@/lib/firebase/admin";
 import { monthStart } from "@/lib/utils/dates";
 import type { DashboardOverview, Organization, OrganizationAdmin, OrganizationPlan, OrganizationStatus, SubscriptionPlan } from "@/types";
 
@@ -110,6 +110,10 @@ export async function updateOrganizationSubscription(input: {
   stripeSubscriptionId?: string | null;
   subscriptionCurrentPeriodEnd?: Date | null;
 }) {
+  const organizationRef = adminDb().collection("organizations").doc(input.organizationId);
+  const organizationDoc = await organizationRef.get();
+  if (!organizationDoc.exists) return;
+
   await adminDb()
     .collection("organizations")
     .doc(input.organizationId)
@@ -127,4 +131,106 @@ export async function updateOrganizationSubscription(input: {
       }),
       { merge: true },
     );
+}
+
+async function deleteQueryDocuments(query: FirebaseFirestore.Query, batchSize = 400): Promise<number> {
+  let deletedCount = 0;
+
+  while (true) {
+    const snap = await query.limit(batchSize).get();
+    if (snap.empty) return deletedCount;
+
+    const batch = adminDb().batch();
+    snap.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+    deletedCount += snap.size;
+
+    if (snap.size < batchSize) return deletedCount;
+  }
+}
+
+async function countOrganizationDocuments(collection: string, organizationId: string): Promise<number> {
+  const snap = await adminDb().collection(collection).where("organizationId", "==", organizationId).count().get();
+  return snap.data().count;
+}
+
+export interface OrganizationDeletionResult {
+  deleted: boolean;
+  firebaseUids: string[];
+  counts: Record<string, number>;
+}
+
+export async function deleteOrganizationAccount(input: {
+  organizationId: string;
+  requestedByFirebaseUid: string;
+}): Promise<OrganizationDeletionResult> {
+  const db = adminDb();
+  const organizationRef = db.collection("organizations").doc(input.organizationId);
+  const organizationDoc = await organizationRef.get();
+  if (!organizationDoc.exists) {
+    return { deleted: false, firebaseUids: [], counts: {} };
+  }
+
+  const organization = fromDoc<Organization>(organizationDoc);
+  const organizationScopedCollections = [
+    "inviteCodes",
+    "students",
+    "studentOnboarding",
+    "conversations",
+    "messages",
+    "checkIns",
+    "growthPlans",
+    "followUpFlags",
+    "usageLogs",
+    "botSessions",
+  ];
+
+  const counts = Object.fromEntries(
+    await Promise.all(
+      organizationScopedCollections.map(async (collection) => [
+        collection,
+        await countOrganizationDocuments(collection, input.organizationId),
+      ]),
+    ),
+  ) as Record<string, number>;
+
+  const adminsSnap = await db.collection("organizationAdmins").where("organizationId", "==", input.organizationId).get();
+  const firebaseUids = adminsSnap.docs
+    .map((doc) => String(doc.data().firebaseUid || doc.id))
+    .filter(Boolean);
+
+  await Promise.all(
+    organizationScopedCollections.map((collection) =>
+      deleteQueryDocuments(db.collection(collection).where("organizationId", "==", input.organizationId)),
+    ),
+  );
+
+  await db.collection("organizationDeletionEvents").add({
+    plan: organization.plan,
+    status: organization.status,
+    studentCount: counts.students ?? 0,
+    inviteCodeCount: counts.inviteCodes ?? 0,
+    checkInCount: counts.checkIns ?? 0,
+    followUpFlagCount: counts.followUpFlags ?? 0,
+    usageLogCount: counts.usageLogs ?? 0,
+    hadStripeCustomer: Boolean(organization.stripeCustomerId),
+    hadStripeSubscription: Boolean(organization.stripeSubscriptionId),
+    requestedByCurrentAdmin: firebaseUids.includes(input.requestedByFirebaseUid),
+    createdAt: organization.createdAt ? toFirestoreDate(organization.createdAt) : null,
+    deletedAt: serverTimestamp(),
+  });
+
+  const batch = db.batch();
+  adminsSnap.docs.forEach((doc) => batch.delete(doc.ref));
+  batch.delete(organizationRef);
+  await batch.commit();
+
+  if (firebaseUids.length) {
+    const result = await adminAuth().deleteUsers(firebaseUids);
+    if (result.failureCount) {
+      console.error("Some Firebase Auth users could not be deleted during organization deletion", result.errors);
+    }
+  }
+
+  return { deleted: true, firebaseUids, counts };
 }

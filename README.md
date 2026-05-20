@@ -20,6 +20,7 @@ Developers and coding agents should read `AGENTS.md` before working on this proj
 - AI chat, conversation summaries, check-in summaries, and cautious follow-up classification
 - Automated check-in reminders and missed-check-in follow-up flags based on each student's selected cadence
 - Admin and Telegram student account deletion flows with associated data cleanup, including `/delete` and Telegram stop/block events when available
+- Organization account deletion from settings with Stripe subscription/customer cleanup, Firebase Auth admin deletion, and organization-scoped data cleanup
 - Stripe Checkout, Billing Portal, and webhook subscription tracking
 - Firestore-backed subscription plan features, student limits, and monthly AI token limits
 - AI usage and estimated cost logging
@@ -180,6 +181,20 @@ The daily job:
 - sends the student a Telegram `/checkin` reminder when due
 - creates one `low_engagement` follow-up flag for that due window after 2 days overdue
 
+## Organization account deletion
+
+School admins can delete the organization account from `/dashboard/settings` by typing the exact organization name and confirming the browser prompt.
+
+The deletion flow:
+
+- cancels the linked Stripe subscription and deletes the Stripe customer when they exist
+- deletes invite codes, students, onboarding records, growth plans, conversations, messages, check-ins, follow-up flags, bot sessions, usage logs, organization admin mappings, and the organization document
+- deletes the Firebase Auth users mapped as admins for the organization
+- clears the current dashboard session cookie
+- retains only a minimal anonymized `organizationDeletionEvents` aggregate for future product-owner insights
+
+Late Stripe subscription webhooks are ignored after the organization document is gone, so they cannot recreate a partial organization record.
+
 ## Firestore security
 
 Rules are in `firestore.rules`.
@@ -218,6 +233,7 @@ The code is structured so those can be added later through separate service modu
 11. Confirm follow-up flags can be marked reviewed or closed.
 12. Try Checkout from `/dashboard/billing` after Stripe env vars are configured.
 13. Send a Stripe webhook test event and confirm organization subscription fields update.
+14. In a disposable test organization, delete the account from `/dashboard/settings` and confirm organization-scoped data is removed.
 
 ## Assumptions and V1 placeholders
 

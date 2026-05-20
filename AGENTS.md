@@ -69,6 +69,7 @@ Every agent must read this file before making changes. Update this file whenever
 - Modern animated public landing page at `/` with student-centered product narrative, Telegram companion preview, school dashboard preview, workflow, and safety positioning
 - Firebase email/password dashboard login at `/login`
 - Organization registration at `/register` and plan selection at `/register/plan`
+- Organization account deletion from `/dashboard/settings` with full organization-scoped data cleanup and Firebase Auth admin deletion
 - Server session cookie creation at `/api/auth/session`
 - Session logout at `/api/auth/logout`
 - Protected dashboard routes under `/dashboard`
@@ -269,6 +270,8 @@ Collections:
   - AI model, tokens, request type, estimated cost.
 - `stripeEvents`
   - Processed Stripe webhook event IDs for idempotency.
+- `organizationDeletionEvents`
+  - Server-only anonymized aggregate deletion events retained for future platform-owner insights. Do not store organization names, admin emails, student names, message content, or other identifying school/student data here.
 - `botSessions`
   - Server-only Telegram flow state.
 
@@ -358,6 +361,31 @@ Security model:
   - `past_due` / `unpaid` -> `past_due`
   - `canceled` / `incomplete_expired` -> `canceled`
 
+## Organization Account Deletion Flow Summary
+
+- Dashboard entrypoint: `/dashboard/settings`
+- School admins must type the exact organization name before deleting.
+- If the organization has a linked Stripe subscription or customer, the server action cancels the subscription and deletes the Stripe customer before cleanup.
+- Cleanup deletes organization-scoped documents from:
+  - `inviteCodes`
+  - `students`
+  - `studentOnboarding`
+  - `conversations`
+  - `messages`
+  - `checkIns`
+  - `growthPlans`
+  - `followUpFlags`
+  - `usageLogs`
+  - `botSessions`
+  - `organizationAdmins`
+  - `organizations`
+- Cleanup deletes Firebase Auth users listed in the organization's `organizationAdmins`.
+- Cleanup removes the linked Stripe customer record when Stripe is configured.
+- The current dashboard session cookie is cleared and the user is redirected to `/login`.
+- A minimal `organizationDeletionEvents` aggregate is retained for future product-owner analytics.
+- Stripe subscription update webhooks intentionally no-op when the organization document has already been deleted, so late webhooks cannot recreate a partial organization record.
+- There is no Firebase Auth trigger in V1; the shared cleanup service can be reused by a future Cloud Functions `onDelete` trigger if Firebase Functions are introduced.
+
 ## AI Behavior And Safety Boundaries
 
 - Main AI functions live in `src/lib/ai/index.ts`.
@@ -436,6 +464,7 @@ Manual checks:
 - Billing portal only works after a Stripe customer is linked.
 - Raw conversation context exists for demo review but should stay secondary to summaries.
 - Deployment instructions are generic and deployment-neutral.
+- Organization deletion is a direct dashboard server action in V1, not a background queue or Firebase Functions trigger.
 
 ## Instructions For Future Agents
 

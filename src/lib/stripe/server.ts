@@ -39,6 +39,18 @@ export function canStartCheckout(organization: Organization): boolean {
   return !["active", "trial"].includes(organization.status) || !organization.stripeSubscriptionId;
 }
 
+export async function cancelStripeSubscriptionNow(subscriptionId: string): Promise<void> {
+  const stripe = stripeClient();
+  if (!stripe) throw new Error("Stripe is not configured, so the active subscription cannot be canceled automatically.");
+  await stripe.subscriptions.cancel(subscriptionId);
+}
+
+export async function deleteStripeCustomerNow(customerId: string): Promise<void> {
+  const stripe = stripeClient();
+  if (!stripe) throw new Error("Stripe is not configured, so the linked customer cannot be deleted automatically.");
+  await stripe.customers.del(customerId);
+}
+
 export function mapStripeStatus(status?: string): "active" | "trial" | "past_due" | "canceled" | "inactive" {
   if (status === "active") return "active";
   if (status === "trialing") return "trial";
