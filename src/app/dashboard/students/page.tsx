@@ -46,46 +46,50 @@ export default async function StudentsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-ink/10">
-              {students.map((student) => (
-                <tr key={student.id}>
-                  <td className="px-4 py-3">
-                    {student.telegramPhotoFileId ? (
-                      <Image
-                        src={`/api/telegram/photo/${encodeURIComponent(student.telegramPhotoFileId)}`}
-                        alt={`${student.displayName} Telegram profile`}
-                        width={40}
-                        height={40}
-                        unoptimized
-                        className="h-10 w-10 rounded-full border border-ink/10 object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-canvas text-xs font-semibold text-ink/50">
-                        {student.displayName.slice(0, 1).toUpperCase()}
+              {students.map((student) => {
+                const displayStatus = student.status === "flagged" && !openFlags.has(student.id) ? "active" : student.status;
+
+                return (
+                  <tr key={student.id}>
+                    <td className="px-4 py-3">
+                      {student.telegramPhotoFileId ? (
+                        <Image
+                          src={`/api/telegram/photo/${encodeURIComponent(student.telegramPhotoFileId)}`}
+                          alt={`${student.displayName} Telegram profile`}
+                          width={40}
+                          height={40}
+                          unoptimized
+                          className="h-10 w-10 rounded-full border border-ink/10 object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-canvas text-xs font-semibold text-ink/50">
+                          {student.displayName.slice(0, 1).toUpperCase()}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 font-medium">{student.displayName}</td>
+                    <td className="px-4 py-3 text-ink/60">{student.telegramUsername ? `@${student.telegramUsername}` : "Not set"}</td>
+                    <td className="px-4 py-3 text-ink/60">{[student.gradeLevel, student.cohort].filter(Boolean).join(" / ") || "Not set"}</td>
+                    <td className="px-4 py-3 text-ink/60">{student.selectedFocusArea || "Not set"}</td>
+                    <td className="px-4 py-3"><Badge tone={statusTone(displayStatus)}>{displayStatus}</Badge></td>
+                    <td className="px-4 py-3 text-ink/60">{formatRelative(student.lastInteractionAt)}</td>
+                    <td className="px-4 py-3">{checkInsByStudent.get(student.id) ?? 0}</td>
+                    <td className="px-4 py-3">
+                      <Badge tone={openFlags.has(student.id) ? "warn" : "good"}>{openFlags.has(student.id) ? "Open" : "Clear"}</Badge>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <Link href={`/dashboard/students/${student.id}`} className="font-semibold text-primary">View</Link>
+                        <form action={deleteStudentFromDashboard}>
+                          <input type="hidden" name="studentId" value={student.id} />
+                          <input type="hidden" name="returnTo" value="/dashboard/students" />
+                          <DeleteStudentButton studentName={student.displayName} />
+                        </form>
                       </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 font-medium">{student.displayName}</td>
-                  <td className="px-4 py-3 text-ink/60">{student.telegramUsername ? `@${student.telegramUsername}` : "Not set"}</td>
-                  <td className="px-4 py-3 text-ink/60">{[student.gradeLevel, student.cohort].filter(Boolean).join(" / ") || "Not set"}</td>
-                  <td className="px-4 py-3 text-ink/60">{student.selectedFocusArea || "Not set"}</td>
-                  <td className="px-4 py-3"><Badge tone={statusTone(student.status)}>{student.status}</Badge></td>
-                  <td className="px-4 py-3 text-ink/60">{formatRelative(student.lastInteractionAt)}</td>
-                  <td className="px-4 py-3">{checkInsByStudent.get(student.id) ?? 0}</td>
-                  <td className="px-4 py-3">
-                    <Badge tone={openFlags.has(student.id) ? "warn" : "good"}>{openFlags.has(student.id) ? "Open" : "Clear"}</Badge>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <Link href={`/dashboard/students/${student.id}`} className="font-semibold text-primary">View</Link>
-                      <form action={deleteStudentFromDashboard}>
-                        <input type="hidden" name="studentId" value={student.id} />
-                        <input type="hidden" name="returnTo" value="/dashboard/students" />
-                        <DeleteStudentButton studentName={student.displayName} />
-                      </form>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -95,7 +95,7 @@ Every agent must read this file before making changes. Update this file whenever
 - Context-aware Telegram onboarding and check-in prompts with plain-text AI summary and suggested next step
 - Automated cadence-based check-in reminders and missed-check-in low-engagement follow-up flags via `/api/cron/check-ins`
 - Follow-up classification and flag creation
-- Follow-up status updates from dashboard
+- Follow-up search, filtering, sorting, and status updates from dashboard
 - Stripe Checkout session creation
 - Stripe Checkout per-session branding matched to the shared app palette
 - Stripe Billing Portal session creation
@@ -281,7 +281,7 @@ Collections:
 - `growthPlans`
   - Student focus area, goal, weekly actions, prompt, next step.
 - `followUpFlags`
-  - Non-diagnostic human follow-up signals.
+  - Non-diagnostic human follow-up signals. Creating a follow-up flag marks the student as `flagged`; closing or reviewing flags clears the student back to `active` only when no open follow-up flags remain for that student.
 - `usageLogs`
   - AI model, tokens, request type, estimated cost.
 - `stripeEvents`

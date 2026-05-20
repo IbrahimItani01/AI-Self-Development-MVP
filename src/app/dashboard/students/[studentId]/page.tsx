@@ -20,12 +20,14 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
     listStudentFollowUps(organization.id, studentId),
   ]);
   const { student, growthPlan, conversation, recentMessages } = detail;
+  const hasOpenFollowUp = flags.some((flag) => flag.status === "open");
+  const displayStatus = student.status === "flagged" && !hasOpenFollowUp ? "active" : student.status;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <SectionTitle title={student.displayName} description="Student profile, progress memory, and school-facing summaries." />
-        <Badge tone={statusTone(student.status)}>{student.status}</Badge>
+        <Badge tone={statusTone(displayStatus)}>{displayStatus}</Badge>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
