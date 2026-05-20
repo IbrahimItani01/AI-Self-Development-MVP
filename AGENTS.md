@@ -69,7 +69,7 @@ Every agent must read this file before making changes. Update this file whenever
 - Modern animated public landing page at `/` with student-centered product narrative, Telegram companion preview, school dashboard preview, workflow, and safety positioning
 - Firebase email/password dashboard login at `/login`
 - Organization registration at `/register` and plan selection at `/register/plan`
-- Organization account deletion from `/dashboard/settings` with full organization-scoped data cleanup and Firebase Auth admin deletion
+- Organization account deletion from `/dashboard/settings` with custom in-app confirmation, full organization-scoped data cleanup, and Firebase Auth admin deletion
 - Server session cookie creation at `/api/auth/session`
 - Session logout at `/api/auth/logout`
 - Protected dashboard routes under `/dashboard`
@@ -83,7 +83,7 @@ Every agent must read this file before making changes. Update this file whenever
   - `/dashboard/billing`
   - `/dashboard/settings`
 - Organization-prefixed invite code generation and activation/deactivation
-- Admin student account deletion with organization-scoped data cleanup
+- Admin student account deletion with custom in-app confirmation and organization-scoped data cleanup
 - Telegram webhook at `/api/telegram/webhook`
 - Telegram `/start`, `/help`, `/checkin`, `/plan`, `/reset`
 - Telegram `/delete` student account deletion confirmation flow
