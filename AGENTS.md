@@ -66,7 +66,7 @@ Every agent must read this file before making changes. Update this file whenever
 
 ## Current Implemented Features
 
-- Modern animated public landing page at `/` with student-centered product narrative, Telegram companion preview, school dashboard preview, workflow, and safety positioning
+- Modern animated public landing page at `/` with student-centered product narrative, Telegram companion preview, school dashboard preview, feature grid, Pro pricing card, testimonials, FAQ, workflow, safety positioning, and footer
 - Firebase email/password dashboard login at `/login`
 - Organization registration at `/register` and plan selection at `/register/plan`
 - Organization account deletion from `/dashboard/settings` with custom in-app confirmation, full organization-scoped data cleanup, and Firebase Auth admin deletion
